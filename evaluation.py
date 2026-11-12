@@ -33,7 +33,7 @@ def _fit_mlp(x, y, xt):
             torch.random.default_generator.manual_seed(107)
             shuffle = torch.Generator().manual_seed(108)
             model = nn.Sequential(nn.Linear(features.shape[1], 64), nn.ReLU(),
-                                  nn.Linear(64, 64), nn.ReLU(), nn.Linear(64, 6))
+                                  nn.Linear(64, 64), nn.ReLU(), nn.Linear(64, targets.shape[1]))
             optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
             for _ in range(80):
                 for ids in torch.randperm(len(x), generator=shuffle).split(256):
@@ -47,7 +47,7 @@ def _fit_mlp(x, y, xt):
         torch.set_num_threads(threads)
 
 
-def fit_probes(z_train, y_train, z_test, y_test):
+def predict_probes(z_train, y_train, z_test):
     """Covariates and targets both use moments from the probe training set only."""
     def standardize(train, test=None):
         train = np.asarray(train, dtype=np.float64)
@@ -61,9 +61,14 @@ def fit_probes(z_train, y_train, z_test, y_test):
     y, mean, scale = standardize(y_train)
     # Ridge alpha=1, unpenalized intercept restored via training means.
     weights = np.linalg.solve(x.T @ x + np.eye(x.shape[1]), x.T @ y)
-    ridge = grouped_r2(y_test, (xt @ weights) * scale + mean, "ridge")
-    mlp = grouped_r2(y_test, _fit_mlp(x, y, xt) * scale + mean, "mlp")
-    return {**ridge, **mlp}
+    return {"ridge": (xt @ weights) * scale + mean,
+            "mlp": _fit_mlp(x, y, xt) * scale + mean}
+
+
+def fit_probes(z_train, y_train, z_test, y_test):
+    predictions = predict_probes(z_train, y_train, z_test)
+    return {**grouped_r2(y_test, predictions["ridge"], "ridge"),
+            **grouped_r2(y_test, predictions["mlp"], "mlp")}
 
 
 class ImageMetrics:

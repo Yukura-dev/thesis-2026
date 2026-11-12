@@ -9,7 +9,7 @@ from matplotlib.colors import Normalize
 import numpy as np
 
 from run_sweep import (
-    LEVELS, LOSSES, PROTOCOL, RADII, ROOT, RUNS, SEEDS, add_design_arguments,
+    LEVELS, LOSSES, PROTOCOL, RADII, ROOT, RUNS, SEEDS, STAGE0_STEPS, add_design_arguments,
     base_config, calibration_table, digest, read_results, select_rates, stage_configs,
 )
 
@@ -110,9 +110,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     add_design_arguments(parser)
     parser.add_argument("--runtime", help="runtime ID if results contain multiple software/device environments")
-    parser.add_argument("--out", type=Path, default=ROOT / "figures")
+    parser.add_argument("--out", type=Path, help="output directory (defaults to figures for the original "
+                                                 "300-step design and figures/steps_N for other budgets)")
     args = parser.parse_args()
     base = base_config(args)
+    if args.out is None:
+        args.out = ROOT / "figures"
+        if base.steps != STAGE0_STEPS:
+            args.out /= f"steps_{base.steps}"
     rows = read_results(RUNS)
     matching = {k: v for k, v in rows.items()
                 if v["runtime"]["protocol"] == PROTOCOL

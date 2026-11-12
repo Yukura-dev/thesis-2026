@@ -1,15 +1,27 @@
 from dataclasses import replace
-import json
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
 
 from plot import aggregate
 from run_sweep import (
-    LOSSES, RADII, RATES, calibration_configs, calibration_table, canonical, digest,
+    LOSSES, RADII, RATES, base_config, calibration_configs, calibration_table, canonical, digest,
     identity, read_results, run_one, select_rates, stage_configs,
 )
 from training import Config
+
+
+def test_recommended_budget_preserves_historical_stage_zero(monkeypatch):
+    args = SimpleNamespace(latent_dim=16, background=.3, foreground=1., steps=None)
+    monkeypatch.setattr("run_sweep.SWEEP_STEPS", 1234)
+    assert base_config(args).steps == 1234  # plotting and calibration
+    args.stage = 1
+    assert base_config(args).steps == 1234
+    args.stage = 0
+    assert base_config(args).steps == 300
+    args.stage, args.steps = 3, 300
+    assert base_config(args).steps == 300
 
 
 def test_sweep_overlap_and_representatives():

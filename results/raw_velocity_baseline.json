@@ -1,0 +1,96 @@
+{
+  "protocol": "clean-two-frame-raw-control-v1",
+  "config": {
+    "radius": 5,
+    "noise_type": "gaussian",
+    "noise_level": 0.0,
+    "noise_placement": "target_only",
+    "background": 0.3,
+    "foreground": 1.0
+  },
+  "train_count": 10000,
+  "test_count": 5000,
+  "batch_size": 128,
+  "train_seed_sequence": [
+    2,
+    0
+  ],
+  "test_seed_sequence": [
+    3,
+    0
+  ],
+  "feature": "all input pixels, both 64x64 frames flattened (8192 columns)",
+  "pooled_feature": "2x2 spatial averages of both input frames flattened (2048 columns)",
+  "target": "outgoing (vx, vy) at t",
+  "regressor": "ridge, unpenalized intercept",
+  "ridge_alpha": 1.0,
+  "standardization": "training pixel feature mean and population SD",
+  "runtime": {
+    "python": "3.13.5",
+    "numpy": "2.3.5",
+    "torch": "2.12.1",
+    "platform": "macOS-26.3.1-arm64-arm-64bit-Mach-O",
+    "device": "cpu"
+  },
+  "velocity_from_raw_pixels": {
+    "r2_x": 0.5170373854727399,
+    "r2_y": 0.4892442820383083,
+    "r2": 0.5031408337555241,
+    "rmse_x": 1.198839539435848,
+    "rmse_y": 1.237160920417332,
+    "rmse": 1.2181509316013792
+  },
+  "velocity_from_2x2_pooled_pixels": {
+    "r2_x": 0.9302422133243541,
+    "r2_y": 0.9389719128926441,
+    "r2": 0.9346070631084991,
+    "rmse_x": 0.4556177630630007,
+    "rmse_y": 0.42764603828097036,
+    "rmse": 0.4418533014904052
+  },
+  "image_centroid_control": {
+    "previous_position": {
+      "r2_x": 0.9999999911966865,
+      "r2_y": 0.9999999914379827,
+      "r2": 0.9999999913173345,
+      "rmse_x": 0.001465874010151151,
+      "rmse_y": 0.0014483318227274929,
+      "rmse": 0.001457129315188216
+    },
+    "current_position": {
+      "r2_x": 0.999999991300051,
+      "r2_y": 0.9999999913196334,
+      "r2": 0.9999999913098422,
+      "rmse_x": 0.0014540278136411697,
+      "rmse_y": 0.0014582348963156973,
+      "rmse": 0.0014561328743756478
+    },
+    "delta_vs_displacement": {
+      "r2_x": 0.999998546045313,
+      "r2_y": 0.9999985396346003,
+      "r2": 0.9999985428399567,
+      "rmse_x": 0.002054953016337635,
+      "rmse_y": 0.0020575140121515583,
+      "rmse": 0.002056233912952895
+    },
+    "delta_vs_velocity": {
+      "r2_x": 0.9532592426278842,
+      "r2_y": 0.9392124563712931,
+      "r2": 0.9462358494995886,
+      "rmse_x": 0.37295134167445615,
+      "rmse_y": 0.42680241828252824,
+      "rmse": 0.40078236457495925
+    }
+  },
+  "true_delta_vs_velocity": {
+    "r2_x": 0.9532681596387569,
+    "r2_y": 0.9392177420626859,
+    "r2": 0.9462429508507214,
+    "rmse_x": 0.3729157649103804,
+    "rmse_y": 0.4267838618910635,
+    "rmse": 0.4007559310162137
+  },
+  "test_examples_reflected_between_frames": 268,
+  "displacement_coordinate_rms": 1.7035513850579243,
+  "velocity_coordinate_rms": 1.728193266539759
+}

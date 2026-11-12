@@ -21,6 +21,8 @@ SEEDS = (0, 1, 2)
 PILOT_SEED = 1729
 RATES = (3e-4, 1e-3, 3e-3)
 PROTOCOL = "circle-ae-v1"
+STAGE0_STEPS = 300
+SWEEP_STEPS = 3000
 
 
 def canonical(config):
@@ -166,7 +168,8 @@ def update_calibration_report(path, base, runtime, table):
 
 def add_design_arguments(parser):
     parser.add_argument("--latent-dim", type=int, choices=(4, 16, 64), default=16)
-    parser.add_argument("--steps", type=int, default=None, help="default: training.Config.steps")
+    parser.add_argument("--steps", type=int, default=None,
+                        help=f"default: {SWEEP_STEPS} (stage 0: {STAGE0_STEPS})")
     parser.add_argument("--background", type=float, default=.3)
     parser.add_argument("--foreground", type=float, default=1.)
 
@@ -174,8 +177,11 @@ def add_design_arguments(parser):
 def base_config(args):
     from training import Config
 
-    kw = {} if args.steps is None else {"steps": args.steps}
-    return Config(latent_dim=args.latent_dim, background=args.background, foreground=args.foreground, **kw)
+    steps = args.steps
+    if steps is None:
+        steps = STAGE0_STEPS if getattr(args, "stage", None) == 0 else SWEEP_STEPS
+    return Config(latent_dim=args.latent_dim, background=args.background, foreground=args.foreground,
+                  steps=steps)
 
 
 def main():
