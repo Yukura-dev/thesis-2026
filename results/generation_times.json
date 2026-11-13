@@ -1,0 +1,601 @@
+{
+  "method": "CPU only, batch size 128, 3 groups of 8 batches, one warmup per group.",
+  "data_seed": 974,
+  "order_seed": 1003,
+  "cells": [
+    {
+      "radius": 1,
+      "noise_type": "gaussian",
+      "noise_level": 0.0,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.0006830728962086141,
+        0.0005796666373498738,
+        0.0007784843910485506
+      ]
+    },
+    {
+      "radius": 1,
+      "noise_type": "gaussian",
+      "noise_level": 0.05,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.007515619770856574,
+        0.009911208384437487,
+        0.009264984371839091
+      ]
+    },
+    {
+      "radius": 1,
+      "noise_type": "gaussian",
+      "noise_level": 0.1,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.008550552127417177,
+        0.007947885373141617,
+        0.008221578114898875
+      ]
+    },
+    {
+      "radius": 1,
+      "noise_type": "gaussian",
+      "noise_level": 0.2,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.009213604120304808,
+        0.009416265616891906,
+        0.008843349001836032
+      ]
+    },
+    {
+      "radius": 1,
+      "noise_type": "gaussian",
+      "noise_level": 0.4,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.006950900977244601,
+        0.007782994885928929,
+        0.008679874998051673
+      ]
+    },
+    {
+      "radius": 1,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.05,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.009486260503763333,
+        0.00831731251673773,
+        0.009028427128214389
+      ]
+    },
+    {
+      "radius": 1,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.1,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.010360302025219426,
+        0.009821270854445174,
+        0.00897354687913321
+      ]
+    },
+    {
+      "radius": 1,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.2,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.010970255243591964,
+        0.011292296869214624,
+        0.01036799474968575
+      ]
+    },
+    {
+      "radius": 1,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.3,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.013299260521307588,
+        0.011591499991482124,
+        0.011808801995357499
+      ]
+    },
+    {
+      "radius": 1,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.45,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.013434150983812287,
+        0.013363067613681778,
+        0.013810281234327704
+      ]
+    },
+    {
+      "radius": 2,
+      "noise_type": "gaussian",
+      "noise_level": 0.0,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.000777468754677102,
+        0.000796333362814039,
+        0.0009169531113002449
+      ]
+    },
+    {
+      "radius": 2,
+      "noise_type": "gaussian",
+      "noise_level": 0.05,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.008975984383141622,
+        0.009349099011160433,
+        0.0098594322334975
+      ]
+    },
+    {
+      "radius": 2,
+      "noise_type": "gaussian",
+      "noise_level": 0.1,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.008698239602381364,
+        0.009358708251966164,
+        0.009664250013884157
+      ]
+    },
+    {
+      "radius": 2,
+      "noise_type": "gaussian",
+      "noise_level": 0.2,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.008863281254889444,
+        0.009227510367054492,
+        0.00909210939425975
+      ]
+    },
+    {
+      "radius": 2,
+      "noise_type": "gaussian",
+      "noise_level": 0.4,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.005356911366106942,
+        0.009317026007920504,
+        0.00843665114371106
+      ]
+    },
+    {
+      "radius": 2,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.05,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.008410604146774858,
+        0.011594364623306319,
+        0.008716927142813802
+      ]
+    },
+    {
+      "radius": 2,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.1,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.009363890625536442,
+        0.010524197859922424,
+        0.009782458248082548
+      ]
+    },
+    {
+      "radius": 2,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.2,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.010571859369520098,
+        0.011915890616364777,
+        0.011584307241719216
+      ]
+    },
+    {
+      "radius": 2,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.3,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.012217937503010035,
+        0.012022895738482475,
+        0.011776567611377686
+      ]
+    },
+    {
+      "radius": 2,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.45,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.013650010514538735,
+        0.01375436974922195,
+        0.0136944426340051
+      ]
+    },
+    {
+      "radius": 3,
+      "noise_type": "gaussian",
+      "noise_level": 0.0,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.0010984218679368496,
+        0.0012686562549788505,
+        0.0012162708735559136
+      ]
+    },
+    {
+      "radius": 3,
+      "noise_type": "gaussian",
+      "noise_level": 0.05,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.009223734377883375,
+        0.009230979107087478,
+        0.009492374985711649
+      ]
+    },
+    {
+      "radius": 3,
+      "noise_type": "gaussian",
+      "noise_level": 0.1,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.008886572875780985,
+        0.008955302007962018,
+        0.009467484371270984
+      ]
+    },
+    {
+      "radius": 3,
+      "noise_type": "gaussian",
+      "noise_level": 0.2,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.009299426979850978,
+        0.009605276136426255,
+        0.009785505244508386
+      ]
+    },
+    {
+      "radius": 3,
+      "noise_type": "gaussian",
+      "noise_level": 0.4,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.006355640623951331,
+        0.009165307244984433,
+        0.012826380232581869
+      ]
+    },
+    {
+      "radius": 3,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.05,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.008724395738681778,
+        0.010859067755518481,
+        0.008869140612659976
+      ]
+    },
+    {
+      "radius": 3,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.1,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.009295484371250495,
+        0.00996241663233377,
+        0.009451515623368323
+      ]
+    },
+    {
+      "radius": 3,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.2,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.01119731250219047,
+        0.010781645745737478,
+        0.011748479126254097
+      ]
+    },
+    {
+      "radius": 3,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.3,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.012384958390612155,
+        0.012041447887895629,
+        0.01269879174651578
+      ]
+    },
+    {
+      "radius": 3,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.45,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.016675843740813434,
+        0.014194760384270921,
+        0.013858239486580715
+      ]
+    },
+    {
+      "radius": 5,
+      "noise_type": "gaussian",
+      "noise_level": 0.0,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.0015150208782870322,
+        0.0019460885087028146,
+        0.0014716197620145977
+      ]
+    },
+    {
+      "radius": 5,
+      "noise_type": "gaussian",
+      "noise_level": 0.05,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.009469046868616715,
+        0.009419520734809339,
+        0.009989999991375953
+      ]
+    },
+    {
+      "radius": 5,
+      "noise_type": "gaussian",
+      "noise_level": 0.1,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.010080968757392839,
+        0.010414349002530798,
+        0.009828619746258482
+      ]
+    },
+    {
+      "radius": 5,
+      "noise_type": "gaussian",
+      "noise_level": 0.2,
+      "placement": "both",
+      "seconds_per_batch": [
+        0.017705062491586432,
+        0.018761817773338407,
+        0.01855477088247426
+      ]
+    },
+    {
+      "radius": 5,
+      "noise_type": "gaussian",
+      "noise_level": 0.2,
+      "placement": "input_only",
+      "seconds_per_batch": [
+        0.007701088616158813,
+        0.01021216664230451,
+        0.010236151021672413
+      ]
+    },
+    {
+      "radius": 5,
+      "noise_type": "gaussian",
+      "noise_level": 0.2,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.010443005274282768,
+        0.009696989640360698,
+        0.009304864652222022
+      ]
+    },
+    {
+      "radius": 5,
+      "noise_type": "gaussian",
+      "noise_level": 0.4,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.009290130255976692,
+        0.009724312491016462,
+        0.010305000003427267
+      ]
+    },
+    {
+      "radius": 5,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.05,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.009272130264434963,
+        0.009169687516987324,
+        0.00916076562134549
+      ]
+    },
+    {
+      "radius": 5,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.1,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.009971437480999157,
+        0.013844005268765613,
+        0.010452265647472814
+      ]
+    },
+    {
+      "radius": 5,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.2,
+      "placement": "both",
+      "seconds_per_batch": [
+        0.022430171869928017,
+        0.021230463491519913,
+        0.02269026037538424
+      ]
+    },
+    {
+      "radius": 5,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.2,
+      "placement": "input_only",
+      "seconds_per_batch": [
+        0.012057458370691165,
+        0.011451145866885781,
+        0.01192691660253331
+      ]
+    },
+    {
+      "radius": 5,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.2,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.01197234375285916,
+        0.013491104124113917,
+        0.011958234361372888
+      ]
+    },
+    {
+      "radius": 5,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.3,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.010623255249811336,
+        0.013765968760708347,
+        0.013898692763177678
+      ]
+    },
+    {
+      "radius": 5,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.45,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.014451807364821434,
+        0.015072578127728775,
+        0.014430005248868838
+      ]
+    },
+    {
+      "radius": 8,
+      "noise_type": "gaussian",
+      "noise_level": 0.0,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.0028695625078398734,
+        0.002142484358046204,
+        0.0032298801525030285
+      ]
+    },
+    {
+      "radius": 8,
+      "noise_type": "gaussian",
+      "noise_level": 0.05,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.010547526006121188,
+        0.010633999976562336,
+        0.010976453108014539
+      ]
+    },
+    {
+      "radius": 8,
+      "noise_type": "gaussian",
+      "noise_level": 0.1,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.012297416775254533,
+        0.011607578140683472,
+        0.011000098864315078
+      ]
+    },
+    {
+      "radius": 8,
+      "noise_type": "gaussian",
+      "noise_level": 0.2,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.010484677128260955,
+        0.010525874997256324,
+        0.011477380234282464
+      ]
+    },
+    {
+      "radius": 8,
+      "noise_type": "gaussian",
+      "noise_level": 0.4,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.0124239219003357,
+        0.012063817761372775,
+        0.011634328140644357
+      ]
+    },
+    {
+      "radius": 8,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.05,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.011773859383538365,
+        0.010655890626367182,
+        0.011467807256849483
+      ]
+    },
+    {
+      "radius": 8,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.1,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.011828458373202011,
+        0.011571583367185667,
+        0.012502187513746321
+      ]
+    },
+    {
+      "radius": 8,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.2,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.012659713480388746,
+        0.013209723983891308,
+        0.012847598874941468
+      ]
+    },
+    {
+      "radius": 8,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.3,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.013152463623555377,
+        0.013894807227188721,
+        0.015653911366825923
+      ]
+    },
+    {
+      "radius": 8,
+      "noise_type": "salt_pepper",
+      "noise_level": 0.45,
+      "placement": "target_only",
+      "seconds_per_batch": [
+        0.015307005145587027,
+        0.0180721145006828,
+        0.015554416633676738
+      ]
+    }
+  ]
+}
