@@ -121,6 +121,22 @@ def main_cases(base, rates, *, shared_lr=False):
     return list(dict.fromkeys(c for stage in stages for c in stage_configs(stage, base, rates)))
 
 
+def with_reconstruction_metrics(source, observations):
+    """Join only the sidecar record minted for this experiment and runtime."""
+    from collapse_replay import spec_for
+    observed = observations.get(digest(spec_for(source)))
+    if observed is None:
+        return source["metrics"]
+    if (observed["source_config_hash"] != source["config_hash"] or
+            observed["model_sha256"] != source["model_sha256"] or
+            observed["probe_score_stream"] != [7, 0] or source["probe_splits"] != [6, 7] or
+            not observed["original_validation_exact"] or not observed["original_reconstruction_metrics_exact"] or
+            observed["metrics"]["psnr"] != source["metrics"]["psnr"]):
+        raise ValueError(f"Reconstruction diagnostic does not match its archived fit: {source['config_hash']}")
+    fields = ("corrected_psnr", "affine_a", "affine_b", "background_psnr", "output_pixel_sd", "mean_frame_pixel_sd")
+    return {**source["metrics"], **{name: observed["metrics"][name] for name in fields}}
+
+
 def summary_cells(cases, data):
     """Seed-wise values and intended/observed denominators for every unique condition."""
     groups = defaultdict(list)
@@ -140,6 +156,12 @@ def summary_cells(cases, data):
                 passed = sum(value > .8 for value in scores)
                 stats[metric] = {"median": float(np.median(scores)) if scores else None,
                                  "successes": passed, "success_rate": passed / n if n else None}
+        if any("corrected_psnr" in m for m in seeds_done.values()):
+            for metric in ("psnr", "corrected_psnr"):
+                scores = [m[metric] for m in seeds_done.values() if metric in m]
+                stats[metric] = {"mean": float(np.mean(scores)),
+                                 "sd": float(np.std(scores, ddof=1)) if len(scores) >= 2 else None,
+                                 "n": len(scores)}
         output.append({"radius": r, "noise_type": kind, "noise_level": level, "placement": place,
                        "loss": loss, "lr": lr, "intended_seeds": intended, "n_evaluated": n,
                        "complete": n == len(intended), "per_seed": seeds_done, "summary": stats})
@@ -251,11 +273,16 @@ def main():
             out /= "shared_lr" if args.shared_lr else "main"
             if args.stage is not None:
                 out /= f"stage_{args.stage}"
+    observations = {}
+    if runtime["protocol"] == FILTERED_PROTOCOL:
+        from collapse_replay import LEDGER
+        observations = read_results(LEDGER)
     data = {}
     for c in cases:
         row = rows.get(digest(identity(c, "experiment", runtime)))
         if row:
-            data[c.radius, c.noise_type, c.noise_level, c.placement, c.loss, c.seed] = row["metrics"]
+            metrics = with_reconstruction_metrics(row, observations) if observations else row["metrics"]
+            data[c.radius, c.noise_type, c.noise_level, c.placement, c.loss, c.seed] = metrics
     if not data:
         print("No eligible main-stage runs; no main-stage heatmaps generated.")
         return
@@ -264,6 +291,12 @@ def main():
     report = {"latent_dim": base.latent_dim, "background": base.background, "foreground": base.foreground,
               "reject_reflections": base.reject_reflections, "frame_gap": base.frame_gap, "steps": base.steps, "runtime": runtime,
               "stage": args.stage, "shared_lr": args.shared_lr, "success_rule": "R² > 0.8", "conditions": cells}
+    n_corrected = sum("corrected_psnr" in m for m in data.values())
+    if n_corrected:
+        report["reconstruction_diagnostics"] = {
+            "source": str(LEDGER.relative_to(ROOT)), "n_evaluated": n_corrected,
+            "corrected_psnr": "One scalar affine fit per run across all clean test pixels in both frames.",
+        }
     (out / "seed_summary.json").write_text(json.dumps(report, ensure_ascii=False, indent=2,
                                                        allow_nan=False) + "\n")
     for placement in sorted({key[3] for key in data}):

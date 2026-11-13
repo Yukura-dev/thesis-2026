@@ -196,3 +196,33 @@ def test_plain_plot_shows_filtered_screen_with_no_qualified_gap(tmp_path, monkey
     assert calls == [(FILTERED_PROTOCOL, tmp_path), (MAIN_PROTOCOL, tmp_path)]
     assert not list(tmp_path.iterdir())
     assert capsys.readouterr().out.count("No main-stage heatmaps: No frame gap passed") == 2
+
+
+def test_corrected_psnr_joins_only_verified_source_weights_and_counts_partial_seeds():
+    from collapse_replay import spec_for
+    from plot import with_reconstruction_metrics
+    cfg = Config(reject_reflections=True, frame_gap=4, steps=3000, lr=.003)
+    runtime = {"device":"cpu", "protocol": FILTERED_PROTOCOL}
+    spec = identity(cfg, "experiment", runtime)
+    probes = dict.fromkeys(("position_r2_ridge", "velocity_r2_ridge", "position_r2_mlp", "velocity_r2_mlp"), .5)
+    source = {**spec, "config_hash": digest(spec), "model_sha256": "example", "probe_splits": [6,7],
+              "metrics": {**probes, "psnr":20.}}
+    diagnostic = spec_for(source)
+    extra = {"corrected_psnr":23., "affine_a":2., "affine_b":-.2, "background_psnr":21.,
+             "output_pixel_sd":.02, "mean_frame_pixel_sd":.018}
+    obs = {**diagnostic, "source_config_hash":source["config_hash"], "model_sha256":"example",
+           "probe_score_stream":[7,0], "original_validation_exact":True,
+           "original_reconstruction_metrics_exact":True, "metrics":{"psnr":20., **extra}}
+    archive = {digest(diagnostic):obs}
+    combined = with_reconstruction_metrics(source, archive)
+    assert combined["corrected_psnr"] == 23. and "corrected_psnr" not in source["metrics"]
+    other = {**source, "config_hash":"other-fit"}
+    assert with_reconstruction_metrics(other, archive) == source["metrics"]
+    metric_key = (5, "gaussian", 0., "target_only", "l2")
+    data = {(*metric_key, 0):combined, (*metric_key, 1):source["metrics"]}
+    summary = summary_cells([cfg, replace(cfg, seed=1)], data)[0]["summary"]
+    assert summary["corrected_psnr"] == {"mean":23., "sd":None, "n":1}
+    assert summary["psnr"] == {"mean":20., "sd":0., "n":2}
+    for invalid in ({"model_sha256":"wrong-weights"}, {"probe_score_stream":[3,0]}):
+        with pytest.raises(ValueError, match="does not match"):
+            with_reconstruction_metrics(source, {digest(diagnostic):{**obs, **invalid}})
