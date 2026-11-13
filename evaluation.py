@@ -73,7 +73,9 @@ def fit_probes(z_train, y_train, z_test, y_test):
 
 class ImageMetrics:
     """Pool clean errors over pixels; average reconstruction contrasts over frames."""
-    def __init__(self):
+    def __init__(self, *, include_center_intensity=False):
+        self.include_center_intensity = include_center_intensity
+        self.center_sum = 0.0
         self.squared_error = self.object_error = self.background_error = 0.0
         self.object_pixels = self.background_pixels = self.frames = 0
         self.contrast = 0.0
@@ -104,15 +106,20 @@ class ImageMetrics:
         k = np.arange(len(images))
         center = ((1 - dy) * ((1 - dx) * images[k, y, x] + dx * images[k, y, x + 1]) +
                   dy * ((1 - dx) * images[k, y + 1, x] + dx * images[k, y + 1, x + 1]))
+        if self.include_center_intensity:
+            self.center_sum += float(center.sum())
         self.contrast += float((center - background).sum())
         self.frames += len(images)
 
     def result(self):
         mse = self.squared_error / (self.object_pixels + self.background_pixels)
-        return {"psnr": -10 * math.log10(mse) if mse > 0 else math.inf,
+        result = {"psnr": -10 * math.log10(mse) if mse > 0 else math.inf,
                 "object_mae": float(self.object_error / self.object_pixels),
                 "background_mae": float(self.background_error / self.background_pixels),
                 "center_contrast": self.contrast / self.frames}
+        if self.include_center_intensity:
+            result["center_intensity"] = self.center_sum / self.frames
+        return result
 
 
 class TemporalReconstruction:
@@ -144,12 +151,13 @@ def validate_probe_splits(splits):
 def evaluate(model, *, radius, noise_type="gaussian", noise_level=0.0,
              noise_placement="target_only", background=0.3, foreground=1.0,
              device="cpu", batch_size=128, n_train=10000, n_test=5000, frame_gap=1,
-             temporal=False, probe_splits=(2, 3)):
+             temporal=False, probe_splits=(2, 3), reject_reflections=False):
     """Run both probes and reconstruction metrics once. No test data select weights."""
     train_split, test_split = validate_probe_splits(probe_splits)
     data_args = dict(radius=radius, noise_type=noise_type, noise_level=noise_level, frame_gap=frame_gap,
+                     reject_reflections=reject_reflections,
                      noise_placement=noise_placement, background=background, foreground=foreground)
-    metrics = ImageMetrics()
+    metrics = ImageMetrics(include_center_intensity=reject_reflections)
     changes = TemporalReconstruction() if temporal else None
 
     def collect(split, size, decode):

@@ -59,3 +59,16 @@ def test_independent_probe_seeds_must_not_reuse_fit_or_validation_splits():
         with pytest.raises(ValueError):
             validate_probe_splits(namespace)
     assert validate_probe_splits((4, 5)) == (4, 5)
+
+
+def test_center_intensity_is_the_absolute_bilinear_value_in_each_reconstruction():
+    from evaluation import ImageMetrics
+    batch = MovieStream(91, radius=5, frame_gap=4, reject_reflections=True).sample(8)
+    yy, xx = np.indices((64, 64))
+    # At fractional (x,y), bilinear interpolation of an affine field is exact.
+    images = np.broadcast_to((.2 + xx/150 + yy/270).astype(np.float32), batch.clean.shape)
+    metrics = ImageMetrics(include_center_intensity=True)
+    metrics.update(images, batch, 5)
+    expected = (.2 + batch.centers[:, :, 0]/150 + batch.centers[:, :, 1]/270).mean()
+    assert metrics.result()["center_intensity"] == pytest.approx(expected)
+    assert metrics.result()["center_contrast"] != pytest.approx(expected)

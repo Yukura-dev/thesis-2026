@@ -23,6 +23,8 @@ PILOT_SEED = 1729
 RATES = (3e-4, 1e-3, 3e-3)
 PROTOCOL = "circle-ae-v1"  # historical stage 0, calibration and 2/3 probe splits
 MAIN_PROTOCOL = "circle-ae-final-gap-v1"  # independent 6/7 probe splits
+FILTERED_PROTOCOL = "circle-ae-filtered-final-v1"
+SANITY_PURPOSE = "filtered_velocity_sanity"
 STAGE0_STEPS = 300
 SWEEP_STEPS = 3000
 
@@ -72,9 +74,17 @@ def digest(value):
                              allow_nan=False).encode()).hexdigest()
 
 
+def config_record(config):
+    """Existing unfiltered rows predate the explicit rejection option."""
+    record = asdict(config)
+    if record.get("reject_reflections") is False:
+        del record["reject_reflections"]
+    return record
+
+
 def historical_config(config):
     """An omitted gap denotes one frame in version-1 rows and checkpoints."""
-    record = asdict(config)
+    record = config_record(config)
     if record.get("frame_gap") == 1:
         record.pop("frame_gap")
     return record
@@ -82,7 +92,8 @@ def historical_config(config):
 
 def identity(config, purpose, runtime):
     config = canonical(config)
-    record = asdict(config) if runtime.get("protocol") == MAIN_PROTOCOL else historical_config(config)
+    record = (config_record(config) if runtime.get("protocol") in (MAIN_PROTOCOL, FILTERED_PROTOCOL)
+              else historical_config(config))
     return {"config": record, "purpose": purpose, "runtime": runtime}
 
 
@@ -127,9 +138,13 @@ def run_one(config, purpose, runtime, stage, rows, path):
         return
     print(f"run {key[:10]} {purpose} r={config.radius} {config.loss} lr={config.lr} "
           f"{config.noise_type}={config.noise_level} {config.placement} seed={config.seed}", flush=True)
-    kwargs = {"probe_splits": (6, 7)} if runtime["protocol"] == MAIN_PROTOCOL else {}
+    kwargs = {}
+    if runtime["protocol"] in (MAIN_PROTOCOL, FILTERED_PROTOCOL):
+        kwargs["probe_splits"] = (8, 9) if purpose == SANITY_PURPOSE else (6, 7)
     outcome = run_experiment(config, device=runtime["device"], calibration=(purpose == "calibration"), **kwargs)
     row = {**spec, "config_hash": key, "first_stage": stage, **outcome}
+    if purpose == SANITY_PURPOSE:
+        row["passed_velocity_sanity"] = row["metrics"]["velocity_r2_mlp"] > 0.8
     line = json.dumps(row, sort_keys=True, separators=(",", ":"), allow_nan=False)
     with path.open("ab") as stream:
         stream.write((line + "\n").encode())
@@ -186,6 +201,12 @@ def update_calibration_report(path, base, runtime, table):
 
 
 def add_design_arguments(parser):
+    sampler = parser.add_mutually_exclusive_group()
+    sampler.add_argument("--reject-reflections", dest="reject_reflections", action="store_true",
+                         help="reject observed wall hits (default for main stages and plots)")
+    sampler.add_argument("--include-observed-reflections", dest="reject_reflections", action="store_false",
+                         help="use the archived sampler with observed reflections")
+    parser.set_defaults(reject_reflections=None)
     parser.add_argument("--frame-gap", type=int, choices=(1, 2, 4, 8),
                         help="explicit interval override; stages otherwise require a qualified gap")
     parser.add_argument("--latent-dim", type=int, choices=(4, 16, 64), default=16)
@@ -202,36 +223,67 @@ def base_config(args, frame_gap=None):
     if steps is None:
         steps = STAGE0_STEPS if getattr(args, "stage", None) == 0 else SWEEP_STEPS
     return Config(latent_dim=args.latent_dim, background=args.background, foreground=args.foreground,
-                  steps=steps, frame_gap=frame_gap or getattr(args, "frame_gap", None) or 1)
+                  steps=steps, frame_gap=frame_gap or getattr(args, "frame_gap", None) or 1,
+                  reject_reflections=getattr(args, "reject_reflections", False))
 
 
-def runtime_info(device, *, historical=False):
+def runtime_info(device, *, historical=False, filtered=False):
     import numpy
     import torch
-    return {"protocol": PROTOCOL if historical else MAIN_PROTOCOL, "device": str(device),
+    protocol = FILTERED_PROTOCOL if filtered else PROTOCOL if historical else MAIN_PROTOCOL
+    return {"protocol": protocol, "device": str(device),
             "torch": str(torch.__version__), "numpy": numpy.__version__}
 
 
 def selection_runtime(runtime):
     # Use the versions recorded in a selected plotting runtime, including on another host.
-    from gap_study import runtime_info as gap_runtime
+    if runtime["protocol"] == FILTERED_PROTOCOL:
+        from filtered_study import runtime_info as gap_runtime
+    else:
+        from gap_study import runtime_info as gap_runtime
     return {**runtime, "protocol": gap_runtime(runtime["device"])["protocol"]}
 
 
 def chosen_gap(rows, runtime, override=None):
-    from gap_study import selected_gap
+    if runtime["protocol"] == FILTERED_PROTOCOL:
+        from filtered_study import oracle_passed, selected_gap
+        if override is not None:
+            raise ValueError("Filtered experiments require the selected interval; remove --frame-gap.")
+        if not oracle_passed():
+            raise ValueError("Filtered true-center readout is incomplete or a velocity R² is below 0.95.")
+    else:
+        from gap_study import selected_gap
     if override is not None:
         return override
     gap = selected_gap(rows, selection_runtime(runtime))
     if gap is None:
-        raise ValueError("No frame gap passed the selection rule. See REPORT.md before choosing "
-                         "an explicit --frame-gap for a separate design.")
+        raise ValueError("No frame gap passed the selection rule for this protocol. See REPORT.md.")
     return gap
 
 
 def main_rates(base, runtime, rows):
-    from gap_study import selected_rates
+    if runtime["protocol"] == FILTERED_PROTOCOL:
+        from filtered_study import selected_rates
+    else:
+        from gap_study import selected_rates
     return selected_rates(rows, selection_runtime(runtime), base.frame_gap)
+
+
+def filtered_sanity_config(rates, gap):
+    from training import Config
+    return Config(radius=8, loss="l2", seed=0, lr=rates["l2"], steps=SWEEP_STEPS,
+                  frame_gap=gap, reject_reflections=True)
+
+
+def require_passed_sanity(rows, cfg, runtime):
+    """A cached result counts only for the exact selected filtered design and split."""
+    row = rows.get(digest(identity(cfg, SANITY_PURPOSE, runtime)))
+    if row is None:
+        raise ValueError("Selected filtered sanity check has not run; run --filtered-sanity first.")
+    score = row["metrics"]["velocity_r2_mlp"]
+    if row.get("probe_splits") != [8, 9] or row.get("passed_velocity_sanity") is not True or not score > .8:
+        raise ValueError(f"Filtered r=8 sanity failed or has wrong holdout: velocity R²={score} (required > 0.8).")
+    return row
 
 
 def main():
@@ -239,6 +291,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--stage", type=int, choices=range(4))
+    group.add_argument("--filtered-sanity", action="store_true", help="record the fresh r=8 filtered velocity check")
     group.add_argument("--calibrate-only", action="store_true", help="historical reconstruction-loss pilots")
     parser.add_argument("--shared-lr", action="store_true",
                         help="stage 1 only: all four losses at the fixed learning rate 0.001")
@@ -246,12 +299,24 @@ def main():
     parser.add_argument("--device", choices=("auto", "cpu", "cuda", "mps"), default="auto")
     add_design_arguments(parser)
     args = parser.parse_args()
+    historical = args.stage == 0 or args.calibrate_only
+    if args.filtered_sanity and args.reject_reflections is False:
+        parser.error("--filtered-sanity requires the sampler that rejects observed wall hits")
+    if args.reject_reflections is None:
+        args.reject_reflections = not historical
+    if args.reject_reflections:
+        if args.stage not in (1, 2, 3) and not args.filtered_sanity:
+            parser.error("the filtered protocol supports the fifth check and stages 1–3")
+        if args.frame_gap is not None:
+            parser.error("filtered stages require the selected frame gap; remove --frame-gap")
+        if (args.filtered_sanity and (args.steps not in (None, SWEEP_STEPS) or args.background != .3
+                                       or args.foreground != 1. or args.latent_dim != 16)):
+            parser.error("the recorded fifth check uses the preset 3,000-step model and intensities")
     if args.shared_lr and args.stage != 1:
         parser.error("--shared-lr is defined only for stage 1")
-    historical = args.stage == 0 or args.calibrate_only
     if historical and args.frame_gap not in (None, 1):
         parser.error("historical stage 0 and reconstruction-loss pilots used --frame-gap 1")
-    runtime = runtime_info(resolve_device(args.device), historical=historical)
+    runtime = runtime_info(resolve_device(args.device), historical=historical, filtered=args.reject_reflections)
     rows = read_results()
     try:
         gap = 1 if historical else chosen_gap(rows, runtime, args.frame_gap)
@@ -259,15 +324,23 @@ def main():
         if historical:
             table = calibration_table(base, runtime, rows)
             rates = select_rates(table) if table else dict.fromkeys(LOSSES, 1e-3)
+        elif args.reject_reflections:
+            rates = main_rates(base, runtime, rows)
+            sanity = filtered_sanity_config(rates, gap)
+            if not args.filtered_sanity:
+                require_passed_sanity(rows, sanity, runtime)
         elif args.shared_lr:
             rates = dict.fromkeys(LOSSES, 1e-3)
         else:
             rates = main_rates(base, runtime, rows)
-    except ValueError as exc:
+    except (ValueError, FileNotFoundError) as exc:
         parser.error(str(exc))
-    cases = calibration_configs(base) if args.calibrate_only else stage_configs(
-        args.stage, base, rates, shared_lr=args.shared_lr)
-    purpose = "calibration" if args.calibrate_only else "experiment"
+    if args.filtered_sanity:
+        cases, purpose = [sanity], SANITY_PURPOSE
+    elif args.calibrate_only:
+        cases, purpose = calibration_configs(base), "calibration"
+    else:
+        cases, purpose = stage_configs(args.stage, base, rates, shared_lr=args.shared_lr), "experiment"
     todo = sum(digest(identity(c, purpose, runtime)) not in rows for c in cases)
     print(f"{purpose}, stage={args.stage}, steps={base.steps}, frame_gap={gap}: "
           f"{len(cases)} unique configs, {todo} remaining")
@@ -280,6 +353,12 @@ def main():
             print("Stage 0 timing uses provisional L2 learning rate 0.001 (no complete calibration).")
         for config in cases:
             run_one(config, purpose, runtime, args.stage, rows, RUNS)
+        if args.filtered_sanity:
+            try:
+                passed = require_passed_sanity(rows, sanity, runtime)
+            except ValueError as exc:
+                parser.exit(1, str(exc) + "\n")
+            print("Passed: filtered r=8 velocity MLP R² =", passed["metrics"]["velocity_r2_mlp"])
         if args.calibrate_only:
             update_calibration_report(REPORT, base, runtime, calibration_table(base, runtime, rows))
 

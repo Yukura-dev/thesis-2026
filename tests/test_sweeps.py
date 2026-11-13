@@ -6,7 +6,7 @@ import pytest
 
 from plot import aggregate, main_cases, summary_cells
 from run_sweep import (
-    LOSSES, MAIN_PROTOCOL, PROTOCOL, RADII, RATES, base_config, calibration_configs, calibration_table, canonical, digest,
+    FILTERED_PROTOCOL, LOSSES, MAIN_PROTOCOL, PROTOCOL, RADII, RATES, base_config, calibration_configs, calibration_table, canonical, digest,
     identity, read_results, run_one, select_rates, stage_configs,
 )
 from training import Config
@@ -122,3 +122,77 @@ def test_median_and_strict_success_fraction_on_incomplete_five_seed_cell():
                for c in rows if not c["n_evaluated"])
     result, _, n = aggregate(data, "gaussian", "target_only", "position_r2_mlp", "l2", "success")
     assert result[RADII.index(5), 0] == 1/3 and n[RADII.index(5), 0] == 3
+
+
+def test_filtered_protocol_isolated_and_sanity_strict():
+    from run_sweep import SANITY_PURPOSE, filtered_sanity_config, require_passed_sanity
+    from gap_study import study_spec, SELECTION
+    rates = dict.fromkeys(LOSSES, .003)
+    cfg = filtered_sanity_config(rates, 2)
+    rt = {"device": "mps", "protocol": FILTERED_PROTOCOL}
+    key = digest(identity(cfg, SANITY_PURPOSE, rt))
+    legacy = replace(cfg, reject_reflections=False)
+    assert "reject_reflections" not in study_spec(legacy, SELECTION, rt)["config"]
+    assert identity(cfg, SANITY_PURPOSE, rt)["config"]["reject_reflections"] is True
+    assert key != digest(identity(legacy, SANITY_PURPOSE, rt))
+    assert len(main_cases(cfg, rates)) == 140
+    stage3 = stage_configs(3, cfg, rates)
+    assert len(stage3) == 330 and {c.seed for c in stage3} == {0, 1, 2}
+    assert all(c.reject_reflections for c in stage3)
+    with pytest.raises(ValueError, match="has not run"):
+        require_passed_sanity({}, cfg, rt)
+    row = {"probe_splits": [8, 9], "passed_velocity_sanity": True, "metrics": {"velocity_r2_mlp": .8}}
+    with pytest.raises(ValueError, match="failed"):
+        require_passed_sanity({key:row}, cfg, rt)
+    row["metrics"]["velocity_r2_mlp"] = .800001
+    assert require_passed_sanity({key:row}, cfg, rt) == row
+    row["probe_splits"] = [6, 7]
+    with pytest.raises(ValueError, match="wrong holdout"):
+        require_passed_sanity({key:row}, cfg, rt)
+
+
+def test_main_cli_defaults_filter_history_and_explicit_design_overrides(monkeypatch):
+    import sys
+    import run_sweep as command
+    seen, gates = [], []
+    monkeypatch.setattr(command, "read_results", lambda: {})
+    monkeypatch.setattr(command, "runtime_info", lambda device, historical=False, filtered=False:
+                        {"protocol": command.FILTERED_PROTOCOL if filtered else command.PROTOCOL if historical
+                         else command.MAIN_PROTOCOL})
+    monkeypatch.setattr(command, "chosen_gap", lambda rows, rt, override=None: override or 2)
+    monkeypatch.setattr(command, "main_rates", lambda base, rt, rows: dict.fromkeys(LOSSES, .001))
+    monkeypatch.setattr(command, "require_passed_sanity", lambda rows, cfg, rt: gates.append((cfg, rt)))
+    original = command.stage_configs
+    def record(stage, base, rates, **kw):
+        seen.append((stage, base))
+        return original(stage, base, rates, **kw)
+    monkeypatch.setattr(command, "stage_configs", record)
+    for flags in (["--stage", "0"], ["--stage", "1", "--latent-dim", "4", "--background", ".2",
+                                      "--foreground", ".9", "--steps", "1234"],
+                  ["--include-observed-reflections", "--stage", "2"], ["--reject-reflections", "--stage", "3"]):
+        monkeypatch.setattr(sys, "argv", ["run_sweep.py", "--dry-run", *flags])
+        command.main()
+    assert [cfg.reject_reflections for _, cfg in seen] == [False, True, False, True]
+    assert [(cfg.latent_dim, cfg.background, cfg.foreground, cfg.steps) for _, cfg in seen][1] == (4,.2,.9,1234)
+    assert len(gates) == 2
+    assert all(cfg.latent_dim == 16 and cfg.steps == command.SWEEP_STEPS for cfg, _ in gates)
+
+
+def test_plain_plot_shows_filtered_screen_with_no_qualified_gap(tmp_path, monkeypatch, capsys):
+    import sys
+    import plot
+    calls = []
+    monkeypatch.setattr(plot, "read_results", lambda path: {})
+    def draw(rows, rt, out):
+        calls.append((rt["protocol"], out))
+        return True
+    monkeypatch.setattr(plot, "draw_selection_if_complete", draw)
+    def none_qualified(*_):
+        raise ValueError("No frame gap passed")
+    monkeypatch.setattr(plot, "chosen_gap", none_qualified)
+    for flags in ([], ["--include-observed-reflections"]):
+        monkeypatch.setattr(sys, "argv", ["plot.py", "--out", str(tmp_path), *flags])
+        plot.main()
+    assert calls == [(FILTERED_PROTOCOL, tmp_path), (MAIN_PROTOCOL, tmp_path)]
+    assert not list(tmp_path.iterdir())
+    assert capsys.readouterr().out.count("No main-stage heatmaps: No frame gap passed") == 2

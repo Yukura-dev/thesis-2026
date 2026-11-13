@@ -51,3 +51,25 @@ def test_large_clean_velocity():
     print("sanity_gap_fit", json.dumps({"config": asdict(cfg), **result}, sort_keys=True))
     score = result["metrics"]["velocity_r2_mlp"]
     assert score > 0.8, f"Held-out velocity MLP R²={score:.6f} (required > 0.8)"
+
+
+def test_filtered_large_clean_velocity():
+    """The new fifth gate is fitted once and checked against the persisted selector decisions."""
+    from filelock import FileLock
+    from run_sweep import (RUNS, SANITY_PURPOSE, chosen_gap, filtered_sanity_config, main_rates,
+                           require_passed_sanity, run_one, runtime_info)
+    device = resolve_device(os.environ.get("AE_DEVICE", "auto"))
+    runtime = runtime_info(device, filtered=True)
+    rows = read_results()
+    try:
+        gap = chosen_gap(rows, runtime)
+        rates = main_rates(Config(frame_gap=gap, reject_reflections=True), runtime, rows)
+    except (ValueError, FileNotFoundError) as exc:
+        pytest.skip(f"未実行: {exc}")
+    cfg = filtered_sanity_config(rates, gap)
+    with FileLock(str(RUNS) + ".lock"):
+        rows = read_results(RUNS, repair=True)
+        run_one(cfg, SANITY_PURPOSE, runtime, None, rows, RUNS)
+    # Check persisted scores even on resume. No retraining to search for a passing seed.
+    scored = require_passed_sanity(rows, cfg, runtime)
+    print("filtered r=8 velocity R²", scored["metrics"]["velocity_r2_mlp"])

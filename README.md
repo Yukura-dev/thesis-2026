@@ -15,7 +15,40 @@ python -m pip check
 
 自動選択の優先順位は CUDA、Apple MPS、CPU です。CUDA では使用する PyTorch と互換性のあるドライバが必要です。データはその場で生成するため、動画のダウンロードは不要です。乱数・計算順・バックエンドを固定し、同一環境での再現を検証します。異なるデバイスや PyTorch のバージョン間でのビット一致は前提にしません。
 
-## 実験の順序
+## 観測区間に反射がないデータでの再実験
+
+以下は、旧仕様の反射診断と区別して記録する条件付きの手順です。前提と実測結果は [REPORT.md](REPORT.md) にあります。旧仕様の実測の再現手順はこの節の後にあります。
+
+```sh
+python reflection_metrics.py        # 旧仕様の真の2位置だけからの速度MLP・Bayes比較
+python reflection_study.py          # 元モデルの重み・全10指標を照合し、同じ予測を層別評価
+python summarize_reflections.py     # 全60件の反射あり・なし・全体のCSVと比較図
+
+python filtered_geometry.py         # 棄却前後の分布、棄却率、真の2位置による速度の対照
+python filtered_study.py --selection
+python plot_filtered_gaps.py           # 全30件が揃ってから、比較図とシード別CSVを再生成
+python filtered_study.py --calibrate-only
+python run_sweep.py --filtered-sanity
+```
+
+旧仕様の Δ=2,4 × r=5,8 の4条件のいずれかで全評価例の真の位置MLP速度 R² < 0.95 なら、新しいデータを調べます。新データは**観測区間のどちらかの軸で反射したペアだけを棄却**し、時刻 t の物理速度と t+5 の反射込み未来位置を元と同じ定義で記録します。30条件（Δ=2,4、r=2,5,8、各5シード）で調べ、r=5 と r=8 の両方の全5シードで速度 MLP R² > 0.8 の最小の Δ を採用します。
+
+新データの6条件すべてで真の位置MLP速度 R² ≥ 0.95 となり、採用 Δ が決まった場合だけ、新しい学習率の36条件を測定します。その結果で選んだ L2 学習率、採用 Δ、r=8、seed=0 の第5チェックは、プローブ用の独立した系列 8/9 （学習10,000・評価5,000例）で速度 MLP R² > 0.8 を判定します。`results/runs.jsonl` に試験結果を残し、不合格は終了コード1です。同じコマンドまたは pytest で再開したときは、保存済みの同一条件の結果を使います。旧条件の第5チェックとは別の行です。
+
+```sh
+# 新しい第5チェックの合格記録がある場合に限って実行可能
+python run_sweep.py --stage 1
+python run_sweep.py --stage 1 --shared-lr
+python run_sweep.py --stage 2
+python plot.py
+python plot.py --shared-lr
+```
+
+ステージ1〜3と `plot.py` の既定は観測区間の反射を棄却する現在の仕様です。明示的な `--reject-reflections` も同じ意味です。観測中の反射を含む旧仕様を指定するときは `--include-observed-reflections` を付けます。ステージ0と `--calibrate-only` は従来どおり旧仕様を再現します。
+
+本実験のプローブ用系列は6/7です。第5チェックや学習率選定の行を本実験として集計しません。ステージ1主比較の50条件とステージ2の100条件では10条件が重なるため、主比較は計140条件です。共通学習率0.001のステージ1感度分析は100条件ですが、選定した主比較と一致する行を再利用します。新条件の図・各シードの値・中央値・成功率は `figures/filtered/steps_3000/gap_D/` 下で主比較（`main/`）と感度分析（`shared_lr/`）に分かれます。件数だけを調べるときは `run_sweep.py` の実行コマンドに `--dry-run` を付けます。棄却条件のステージ3は今回の実行対象外です。将来実施する場合は合格記録がある環境で `python run_sweep.py --stage 3`、図は `python plot.py --stage 3` で出力できます。ステージ3では各3シードを使います。通常の棄却条件の図はステージ1・2だけを集計します。
+
+## 旧仕様の実験順序
 
 ```sh
 python run_sweep.py --calibrate-only --steps 300   # ステージ0用の学習率比較
@@ -62,22 +95,22 @@ python summarize_reflections.py    # シード・群別のCSVと図
 
 再現評価は元の重みのSHA-256と元の全10評価指標を照合します。完了行は設定ハッシュで再利用します。中断時の重みとサンプル別予測は Git 管理外の `checkpoints/reflection/` に保存します。
 
-### 本実験の起動
+### 旧仕様での本実験コマンド
 
 ステージ1〜3は未実行です。採用条件で後日実施する場合、通常の各コマンドはプローブで選んだ損失別の学習率と3,000ステップを使います。
 
 ```sh
-python run_sweep.py --stage 1
-python run_sweep.py --stage 2
-python run_sweep.py --stage 3
-python plot.py
+python run_sweep.py --include-observed-reflections --stage 1
+python run_sweep.py --include-observed-reflections --stage 2
+python run_sweep.py --include-observed-reflections --stage 3
+python plot.py --include-observed-reflections
 
 # ステージ1限定の感度分析。通常のステージ1には含めない。
-python run_sweep.py --stage 1 --shared-lr
-python plot.py --shared-lr
+python run_sweep.py --include-observed-reflections --stage 1 --shared-lr
+python plot.py --include-observed-reflections --shared-lr
 ```
 
-感度分析では全半径、全4損失、各5シードを、同じ学習率 0.001 で比較します。主比較との間で学習率を含む設定が同じなら、同じ実測行を利用します。Δが選ばれなかった後に明示的に間隔 D を指定して別の感度分析を行う場合のみ、`--stage 1 --shared-lr --frame-gap D` が使えます。通常の本実験では該当するΔのプローブ学習率比較が必要です。
+感度分析では全半径、全4損失、各5シードを、同じ学習率 0.001 で比較します。主比較との間で学習率を含む設定が同じなら、同じ実測行を利用します。Δが選ばれなかった後に明示的に間隔 D を指定して別の感度分析を行う場合のみ、`--include-observed-reflections --stage 1 --shared-lr --frame-gap D` が使えます。通常の本実験では該当するΔのプローブ学習率比較が必要です。
 
 ## データと評価の読み方
 
@@ -106,7 +139,7 @@ L2 は平均二乗誤差、L1 は平均絶対誤差、Huber は δ=0.1、Charbon
 
 ## 設定と再開
 
-`--device auto|mps|cuda|cpu`、`--latent-dim 4|16|64`、`--steps`、`--background`、`--foreground` を指定できます。件数だけの確認は例として `python run_sweep.py --stage 2 --dry-run`。ステージ1〜3は `gap_study.py` の選定結果を使います。Δまたは学習率の測定が未完了なら理由を表示して終了します。パイロット前にステージ0だけを呼んだ場合は暫定値0.001を使い、その旨を表示します。上記の順序なら選んだ学習率で計測します。
+`--device auto|mps|cuda|cpu`、`--latent-dim 4|16|64`、`--steps`、`--background`、`--foreground` を指定できます。件数だけの確認は例として `python run_sweep.py --stage 2 --dry-run`。現在のステージ1〜3は `filtered_study.py`（旧仕様を明示したときは `gap_study.py`）の選定結果を使います。Δまたは学習率の測定が未完了なら理由を表示して終了します。パイロット前にステージ0だけを呼んだ場合は暫定値0.001を使い、その旨を表示します。上記の順序なら選んだ学習率で計測します。ステージ1〜3で潜在次元・輝度・ステップ数を明示的に変えると、標準の16次元・輝度0.3/1.0・3,000ステップで選んだΔと損失別学習率を引き継いだ別設定として記録します。標準設定の健全性チェックはその実行にも必要で、変更した設定自体の合格判定ではありません。
 
 完了した設定だけを `results/runs.jsonl` に追記します。新しい本実験はフレーム間隔と独立した評価データの手順を含むため、見かけの設定が一致する場合も以前の診断結果を本実験の行として使いません。設定、目的（学習率選定／本実験）、手順の版、計算デバイスとライブラリの版から SHA-256 を計算します。ステージ番号はハッシュに含めず、ノイズ量0は種別によらず同じキーにするため、既存の同じ実験はステージをまたいで再利用します。中断後は同じコマンドを再実行してください。完了済みの設定をスキップし、中断した1設定だけは最初から計算します。ステージ1〜3では動画・途中の重みを保存せず、診断用のチェックポイントは Git の対象外にします。新しいプロトコルに変更する際は `run_sweep.PROTOCOL` も変えてください。
 
@@ -123,6 +156,6 @@ python plot.py
 
 r=8 の位置チェック（> 0.95）と再現性確認は、既存条件の Δ=1、3,000ステップ、L2 学習率0.003で行います。追加の速度チェックは選定済みの Δ と L2 学習率を使い、seed=0、速度 MLP R² > 0.8 を判定します。Δの合格条件を満たさない場合の速度チェックは `skipped / 未実行` です。過去の不合格結果は [REPORT.md](REPORT.md) に残ります。元の300ステップで当時のチェックだけを再現する場合は `AE_SANITY_STEPS=300 AE_SANITY_LR=0.003 python -m pytest -q -s tests/test_training.py -k "not test_large_clean_velocity"` を使います。
 
-`python plot.py` は全60件がそろっていれば、まず Δ 選定の成功率を `figures/gap_selection_success.png` に描きます。主比較の実測だけを `figures/steps_N/gap_D/main/` に描きます。感度分析には `python plot.py --shared-lr` を使い、別ディレクトリに出力します。旧ステージ0は `python plot.py --historical` で `figures/` に再生成できます。主比較と感度分析には位置・速度のリッジ／MLP別に、中央値と「R² > 0.8 だったシードの割合」のヒートマップが加わります。平均の図は標本標準偏差（分母 n−1）を併記し、L1−L2 は両方あるシードで差を取ります。n はそのセルで評価できた数、灰色は未実行／差を計算できないセルです。
+`python plot.py` は新データの30件がそろったときに Δ 選定の実測図 `figures/filtered_gap_screen.png` を出力します。適格なΔがなくてもこの診断図は生成します。本実験に実測行があれば `figures/filtered/steps_N/gap_D/main/` に主比較の図を追加します。旧仕様の60件は `python plot.py --include-observed-reflections` で `figures/gap_selection_success.png` に再現できます。感度分析には `python plot.py --shared-lr` を使い、別ディレクトリに出力します。旧ステージ0は `python plot.py --historical` で `figures/` に再生成できます。主比較と感度分析には位置・速度のリッジ／MLP別に、中央値と「R² > 0.8 だったシードの割合」のヒートマップが加わります。平均の図は標本標準偏差（分母 n−1）を併記し、L1−L2 は両方あるシードで差を取ります。n はそのセルで評価できた数、灰色は未実行／差を計算できないセルです。
 
-各出力先の `seed_summary.json` に条件別の予定シード、観測数、各シードの全指標、位置・速度R²の中央値、成功数・成功率を保存します。成功率の分母は観測シード数です。未実行の中央値・率は `null`、部分的なセルは `complete: false` として区別します。通常の `python plot.py` はステージ1〜3の和集合を取り、測定数が増えたセルには5シードすべてを含め、ステージ3のみのセルは最大3シードです。半径やノイズ条件間でシードをそろえて比べるには `python plot.py --stage 3` を使います。ステージ3が予定するセルと seed=0、1、2 に限定し、同一設定で既に他ステージで得た実測も利用します。フィルタ後の図とシード表は別の `stage_3/` に保存します。ノイズ量0は両ノイズで共通の測定を参照します。
+各出力先の `seed_summary.json` に条件別の予定シード、観測数、各シードの全指標、位置・速度R²の中央値、成功数・成功率を保存します。成功率の分母は観測シード数です。未実行の中央値・率は `null`、部分的なセルは `complete: false` として区別します。既定の `python plot.py` は現在のステージ1・2の和集合（各5シード）を使います。旧仕様を明示した場合はステージ1〜3の和集合を取り、ステージ3だけのセルは最大3シードです。半径やノイズ条件間でシードをそろえて比べるには `python plot.py --stage 3` を使います。ステージ3が予定するセルと seed=0、1、2 に限定し、同一設定で既に他ステージで得た実測も利用します。フィルタ後の図とシード表は別の `stage_3/` に保存します。ノイズ量0は両ノイズで共通の測定を参照します。

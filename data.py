@@ -24,6 +24,18 @@ def reflect(position, velocity, dt, radius):
     return center, speed
 
 
+def reflection_axes(current, outgoing, radius, frame_gap):
+    """Whether either center reaches a wall in (t−gap,t], by axis in reverse time.
+
+    On an exact wall at t the outgoing (forward-time) sign points inward, so
+    backtracking goes out immediately. If the first wall is reached exactly
+    at t−gap, it is outside this half-open interval.
+    """
+    lo, hi = radius - .5, SIZE - .5 - radius
+    unfurled = np.asarray(current, np.float64) - frame_gap * np.asarray(outgoing, np.float64)
+    return (unfurled < lo) | (unfurled > hi)
+
+
 def disk_images(centers, radius, background=0.3, foreground=1.0):
     """Exact disk/pixel overlap by integrating one quadrant at pixel corners.
 
@@ -86,8 +98,13 @@ class Batch:
 
 class MovieStream:
     def __init__(self, seed, *, radius, noise_type="gaussian", noise_level=0.0,
-                 noise_placement="target_only", background=0.3, foreground=1.0, frame_gap=1):
+                 noise_placement="target_only", background=0.3, foreground=1.0, frame_gap=1,
+                 reject_reflections=False):
         validate_frame_gap(frame_gap)
+        if not isinstance(reject_reflections, bool):
+            raise ValueError("reject_reflections must be boolean")
+        self.reject_reflections = reject_reflections
+        self.proposed = self.accepted = 0
         self.frame_gap = int(frame_gap)
         if radius not in (1, 2, 3, 5, 8):
             raise ValueError("radius must be one of 1, 2, 3, 5, 8")
@@ -106,7 +123,7 @@ class MovieStream:
         base = np.random.SeedSequence(seq.entropy, spawn_key=seq.spawn_key, pool_size=seq.pool_size)
         self.motion, self.input_rng, self.target_rng = map(np.random.default_rng, base.spawn(3))
 
-    def sample(self, n, *, need_target=True):
+    def _propose(self, n):
         # Draw the four independent uniforms together so motion is invariant to chunk size.
         draw = self.motion.random((n, 4))
         previous = self.radius - 0.5 + (SIZE - 2 * self.radius) * draw[:, :2]
@@ -119,6 +136,32 @@ class MovieStream:
         if self.frame_gap != 1:
             previous, _ = reflect(current, -outgoing, self.frame_gap, self.radius)
         centers = np.stack((previous, current), axis=1)
+        labels = np.concatenate((current, outgoing, future), axis=1)
+        return centers, labels
+
+    def geometry(self, n):
+        """Accepted trajectory endpoints and labels in float64, before any rendering."""
+        centers, labels = self._propose(n)
+        self.proposed += n
+        if self.reject_reflections:
+            kept_centers, kept_labels = [], []
+            remaining = n
+            while remaining:
+                keep = ~reflection_axes(centers[:, 1], labels[:, 2:4], self.radius, self.frame_gap).any(axis=1)
+                kept_centers.append(centers[keep])
+                kept_labels.append(labels[keep])
+                remaining -= int(keep.sum())
+                if remaining:
+                    centers, labels = self._propose(remaining)
+                    self.proposed += remaining
+            if n:
+                centers = np.concatenate(kept_centers)
+                labels = np.concatenate(kept_labels)
+        self.accepted += n
+        return centers, labels
+
+    def sample(self, n, *, need_target=True):
+        centers, labels = self.geometry(n)
         clean = disk_images(centers, self.radius, self.background, self.foreground)
         inputs = (noise(clean, self.input_rng, self.kind, self.level)
                   if self.placement in ("input_only", "both") else clean)
@@ -126,5 +169,4 @@ class MovieStream:
         if need_target:
             target = (noise(clean, self.target_rng, self.kind, self.level)
                       if self.placement in ("target_only", "both") else clean)
-        labels = np.concatenate((current, outgoing, future), axis=1).astype(np.float32)
-        return Batch(inputs, target, clean, labels, centers.astype(np.float32))
+        return Batch(inputs, target, clean, labels.astype(np.float32), centers.astype(np.float32))

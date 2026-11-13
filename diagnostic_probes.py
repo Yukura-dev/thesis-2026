@@ -48,7 +48,7 @@ def _batches(args, split, size, batch_size):
 def evaluate_diagnostic(model, config, device, *, probe_splits=(2, 3)):
     """Fit historical six-output probes and separate four-output endpoint probes on z."""
     train_split, test_split = validate_probe_splits(probe_splits)
-    metrics = ImageMetrics()
+    metrics = ImageMetrics(include_center_intensity=config.reject_reflections)
     temporal = TemporalReconstruction()
 
     def collect(split, size):

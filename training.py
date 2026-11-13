@@ -34,9 +34,12 @@ class Config:
     probe_train: int = 10000
     probe_test: int = 5000
     frame_gap: int = 1
+    reject_reflections: bool = False
 
     def __post_init__(self):
         validate_frame_gap(self.frame_gap)
+        if not isinstance(self.reject_reflections, bool):
+            raise ValueError("reject_reflections must be boolean")
         if self.radius not in (1, 2, 3, 5, 8) or self.latent_dim not in (4, 16, 64):
             raise ValueError("Unsupported radius or latent dimension")
         if self.loss not in ("l1", "l2", "huber", "charbonnier"):
@@ -61,7 +64,7 @@ class Config:
     def movie_kwargs(self):
         return dict(radius=self.radius, noise_type=self.noise_type, noise_level=self.noise_level,
                     noise_placement=self.placement, background=self.background, foreground=self.foreground,
-                    frame_gap=self.frame_gap)
+                    frame_gap=self.frame_gap, reject_reflections=self.reject_reflections)
 
 
 class Autoencoder(nn.Module):
@@ -261,6 +264,8 @@ def run_experiment(config: Config, device="auto", *, calibration=False, diagnost
                 extra["temporal_reconstruction"] = metrics.pop("temporal_reconstruction")
         if not calibration and (diagnostic or temporal or tuple(probe_splits) != (2, 3)):
             extra["probe_splits"] = list(probe_splits)
+        if config.reject_reflections:
+            extra["train_window_counts"] = {"proposed": stream.proposed, "accepted": stream.accepted}
         _sync(device)
         evaluation_end = time.perf_counter()
         model_hash = _parameter_digest(model)

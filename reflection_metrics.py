@@ -8,23 +8,11 @@ import tempfile
 import numpy as np
 import torch
 
-from data import MovieStream, SIZE, reflect
+from data import MovieStream, SIZE, reflect, reflection_axes
 from diagnostic_probes import paired_scores
 from evaluation import predict_probes
 
 OUTPUT = Path(__file__).resolve().parent / "results" / "reflection_oracle.json"
-
-
-def reflection_axes(current, outgoing, radius, frame_gap):
-    """Whether either center reaches a wall in (t−gap,t], by axis in reverse time.
-
-    On an exact wall at t the outgoing (forward-time) sign points inward, so
-    backtracking goes out immediately. If the first wall is reached exactly
-    at t−gap, it is outside this half-open interval.
-    """
-    lo, hi = radius - .5, SIZE - .5 - radius
-    unfurled = np.asarray(current, np.float64) - frame_gap * np.asarray(outgoing, np.float64)
-    return (unfurled < lo) | (unfurled > hi)
 
 
 def historical_geometry(radius, frame_gap, split=3, count=5000):

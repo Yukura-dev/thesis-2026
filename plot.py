@@ -12,7 +12,7 @@ from matplotlib.colors import Normalize
 import numpy as np
 
 from run_sweep import (
-    LEVELS, LOSSES, MAIN_PROTOCOL, PROTOCOL, RADII, ROOT, RUNS, SEEDS, STAGE0_STEPS, add_design_arguments,
+    FILTERED_PROTOCOL, LEVELS, LOSSES, MAIN_PROTOCOL, PROTOCOL, RADII, ROOT, RUNS, SEEDS, STAGE0_STEPS, add_design_arguments,
     base_config, calibration_table, chosen_gap, digest, identity, main_rates, read_results, selection_runtime, select_rates, stage_configs,
 )
 
@@ -117,7 +117,8 @@ def plot_metrics(data, kind, placement, probe, losses, out, statistic="mean"):
 def main_cases(base, rates, *, shared_lr=False):
     if shared_lr:
         return stage_configs(1, base, rates, shared_lr=True)
-    return list(dict.fromkeys(c for stage in (1, 2, 3) for c in stage_configs(stage, base, rates)))
+    stages = (1, 2) if base.reject_reflections else (1, 2, 3)
+    return list(dict.fromkeys(c for stage in stages for c in stage_configs(stage, base, rates)))
 
 
 def summary_cells(cases, data):
@@ -145,18 +146,31 @@ def summary_cells(cases, data):
     return output
 
 
-def draw_selection_if_complete(rows, runtime, out):
+def draw_selection_if_complete(rows, runtime, out=None):
     """The interval study has its own real success map even before any main stage is run."""
+    directory = out if out is not None else ROOT / "figures"
+    gap_runtime = selection_runtime(runtime)
+    if runtime["protocol"] == FILTERED_PROTOCOL:
+        from filtered_study import selected_gap
+        from plot_filtered_gaps import CSV_DESTINATION, DESTINATION, write_outputs
+        try:
+            selected_gap(rows, gap_runtime)
+        except ValueError:
+            return False
+        path = directory / DESTINATION.name
+        csv_path = CSV_DESTINATION if out is None else directory / CSV_DESTINATION.name
+        write_outputs(rows, gap_runtime["device"], path, csv_path, runtime=gap_runtime)
+        print(f"Filtered gap screen (30 measured fits): {path}")
+        return True
     from gap_study import SELECTION, selected_gap
     from summarize_gaps import selection_figure, summaries
-    gap_runtime = selection_runtime(runtime)
     try:
         selected_gap(rows, gap_runtime)
     except ValueError:
         return False
     trials = [r for r in rows.values() if r["purpose"] == SELECTION and r["runtime"] == gap_runtime]
-    out.mkdir(exist_ok=True, parents=True)
-    path = out / "gap_selection_success.png"
+    directory.mkdir(exist_ok=True, parents=True)
+    path = directory / "gap_selection_success.png"
     selection_figure(summaries(trials), path)
     print(f"Gap selection only: {path}")
     return True
@@ -174,7 +188,11 @@ def main():
     parser.add_argument("--shared-lr", action="store_true", help="plot stage 1 shared-LR sensitivity")
     parser.add_argument("--out", type=Path, help="output directory")
     args = parser.parse_args()
-    archive = args.historical or (args.steps == 300 and args.frame_gap is None and not args.shared_lr and args.stage is None)
+    archive = args.historical or (not args.reject_reflections and args.steps == 300 and args.frame_gap is None and not args.shared_lr and args.stage is None)
+    if args.reject_reflections is None:
+        args.reject_reflections = not archive
+    if args.reject_reflections and (archive or args.frame_gap is not None):
+        parser.error("filtered plots require the selected frame gap")
     if args.shared_lr and args.stage not in (None, 1):
         parser.error("shared-LR sensitivity is defined only for stage 1")
     if archive and args.stage is not None:
@@ -185,9 +203,16 @@ def main():
         args.steps = 300
     base = base_config(args)
     rows = read_results(RUNS)
-    protocol = PROTOCOL if archive else MAIN_PROTOCOL
+    protocol = FILTERED_PROTOCOL if args.reject_reflections else PROTOCOL if archive else MAIN_PROTOCOL
     runtimes = {digest(r["runtime"])[:12]: r["runtime"] for r in rows.values()
                 if r["runtime"]["protocol"] == protocol and r["purpose"] == "experiment"}
+    if not archive:
+        selector = selection_runtime(runtime_info(resolve_device(), filtered=args.reject_reflections))
+        purpose = "filtered_gap_selection" if args.reject_reflections else "gap_selection"
+        for row in rows.values():
+            if row["purpose"] == purpose and row["runtime"]["protocol"] == selector["protocol"]:
+                final_runtime = {**row["runtime"], "protocol": protocol}
+                runtimes[digest(final_runtime)[:12]] = final_runtime
     if args.runtime is not None:
         if args.runtime not in runtimes:
             parser.error(f"Unknown runtime. Available: {runtimes}")
@@ -195,10 +220,10 @@ def main():
     elif len(runtimes) > 1:
         parser.error(f"Choose --runtime from {runtimes}")
     else:
-        runtime = next(iter(runtimes.values()), runtime_info(resolve_device(), historical=archive))
+        runtime = next(iter(runtimes.values()), runtime_info(resolve_device(), historical=archive, filtered=args.reject_reflections))
     drew_selection = False
     if not archive and not args.shared_lr and args.frame_gap is None and args.stage is None:
-        drew_selection = draw_selection_if_complete(rows, runtime, args.out or ROOT / "figures")
+        drew_selection = draw_selection_if_complete(rows, runtime, args.out)
     if archive:
         table = calibration_table(base, runtime, rows)
         rates = select_rates(table) if table else dict.fromkeys(LOSSES, 1e-3)
@@ -207,7 +232,7 @@ def main():
         try:
             base = replace(base, frame_gap=chosen_gap(rows, runtime, args.frame_gap))
             rates = dict.fromkeys(LOSSES, 1e-3) if args.shared_lr else main_rates(base, runtime, rows)
-        except ValueError as exc:
+        except (ValueError, FileNotFoundError) as exc:
             if drew_selection:
                 print(f"No main-stage heatmaps: {exc}")
                 return
@@ -217,8 +242,13 @@ def main():
     out = args.out
     if out is None:
         out = ROOT / "figures"
+        if args.reject_reflections:
+            out /= "filtered"
         if not archive:
-            out = out / f"steps_{base.steps}" / f"gap_{base.frame_gap}" / ("shared_lr" if args.shared_lr else "main")
+            out = out / f"steps_{base.steps}" / f"gap_{base.frame_gap}"
+            if (base.latent_dim, base.background, base.foreground) != (16, .3, 1.):
+                out /= f"z_{base.latent_dim}_bg_{base.background:g}_fg_{base.foreground:g}"
+            out /= "shared_lr" if args.shared_lr else "main"
             if args.stage is not None:
                 out /= f"stage_{args.stage}"
     data = {}
@@ -231,7 +261,8 @@ def main():
         return
     out.mkdir(exist_ok=True, parents=True)
     cells = summary_cells(cases, data)
-    report = {"frame_gap": base.frame_gap, "steps": base.steps, "runtime": runtime,
+    report = {"latent_dim": base.latent_dim, "background": base.background, "foreground": base.foreground,
+              "reject_reflections": base.reject_reflections, "frame_gap": base.frame_gap, "steps": base.steps, "runtime": runtime,
               "stage": args.stage, "shared_lr": args.shared_lr, "success_rule": "R² > 0.8", "conditions": cells}
     (out / "seed_summary.json").write_text(json.dumps(report, ensure_ascii=False, indent=2,
                                                        allow_nan=False) + "\n")

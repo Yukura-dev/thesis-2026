@@ -100,3 +100,28 @@ def test_gap8_observes_the_same_trajectory_including_reflections():
     observed_speed = (sample.centers[:, 1] - sample.centers[:, 0]) / 8
     np.testing.assert_allclose(observed_speed[~reflected], sample.labels[~reflected, 2:4], atol=1e-6)
     assert np.max(np.abs(observed_speed[reflected] - sample.labels[reflected, 2:4])) > 1
+
+
+def test_filtered_stream_drops_only_observation_hits_and_reproduces_the_accepted_prefix():
+    from data import reflection_axes
+    options = dict(radius=8, frame_gap=8)
+    stream = MovieStream(81, **options, reject_reflections=True)
+    centers, y = stream.geometry(400)
+    assert stream.accepted == 400 < stream.proposed
+    proposals = MovieStream(81, **options)
+    all_centers, all_y = proposals.geometry(stream.proposed)
+    keep = ~reflection_axes(all_y[:, :2], all_y[:, 2:4], 8, 8).any(axis=1)
+    np.testing.assert_array_equal(centers, all_centers[keep])
+    np.testing.assert_array_equal(y, all_y[keep])
+    np.testing.assert_allclose((centers[:, 1] - centers[:, 0])/8, y[:, 2:4], atol=2e-13)
+    straight = centers[:, 1] + 5*y[:, 2:4]
+    future_hit = ((straight < 7.5) | (straight > 55.5)).any(axis=1)
+    assert future_hit.any()
+    assert np.any(np.abs(straight[future_hit] - y[future_hit, 4:]) > 1)
+    expected_future, _ = reflect(centers[:, 1], y[:, 2:4], 5, 8)
+    np.testing.assert_array_equal(y[:, 4:], expected_future)
+    # Drawing/rendering a different batch partition gives the same accepted prefix.
+    stream = MovieStream(81, **options, reject_reflections=True)
+    chunks = [stream.sample(n) for n in (127, 201, 72)]
+    np.testing.assert_array_equal(y.astype(np.float32), np.concatenate([b.labels for b in chunks]))
+    np.testing.assert_array_equal(centers.astype(np.float32), np.concatenate([b.centers for b in chunks]))

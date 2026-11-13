@@ -1,6 +1,5 @@
 """Select the smallest reliable two-frame gap, then calibrate LR on separate data."""
 import argparse
-from dataclasses import asdict
 import json
 import os
 import time
@@ -9,7 +8,7 @@ from filelock import FileLock
 import numpy as np
 import torch
 
-from run_sweep import LOSSES, RATES, RUNS, digest, read_results
+from run_sweep import LOSSES, RATES, RUNS, config_record, digest, read_results
 from training import Config, resolve_device, run_experiment
 
 GAPS = (1, 2, 4, 8)
@@ -42,7 +41,7 @@ def calibration_configs(gap):
 
 
 def study_spec(config, purpose, runtime):
-    return {"config": asdict(config), "purpose": purpose, "runtime": runtime}
+    return {"config": config_record(config), "purpose": purpose, "runtime": runtime}
 
 
 def _complete_rows(configs, purpose, rows, runtime):
@@ -66,6 +65,10 @@ def selected_gap(rows, runtime):
 
 def selected_rates(rows, runtime, gap):
     measured = _complete_rows(calibration_configs(gap), CALIBRATION, rows, runtime)
+    return rates_from_measurements(measured)
+
+
+def rates_from_measurements(measured):
     rates = {}
     for loss in LOSSES:
         means = {}
@@ -86,7 +89,7 @@ def _old_diagnostic(config, runtime, rows):
     """Only three original step-diagnostic fits match the entire gap-selection protocol."""
     if not (config.frame_gap == 1 and config.radius == 5 and config.seed in (0, 1, 2)):
         return None
-    old_config = asdict(config)
+    old_config = config_record(config)
     del old_config["frame_gap"]
     old_spec = {"config": old_config, "purpose": "step_diagnostic",
                 "runtime": {**runtime, "protocol": "circle-ae-step-diagnostic-v1"}}
