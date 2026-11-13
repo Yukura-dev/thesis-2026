@@ -17,10 +17,12 @@ REPORT = ROOT / "REPORT.md"
 RADII = (1, 2, 3, 5, 8)
 LEVELS = {"salt_pepper": (0., .05, .1, .2, .3, .45), "gaussian": (0., .05, .1, .2, .4)}
 LOSSES = ("l1", "l2", "huber", "charbonnier")
-SEEDS = (0, 1, 2)
+SEEDS = (0, 1, 2, 3, 4)
+STAGE3_SEEDS = SEEDS[:3]
 PILOT_SEED = 1729
 RATES = (3e-4, 1e-3, 3e-3)
-PROTOCOL = "circle-ae-v1"
+PROTOCOL = "circle-ae-v1"  # historical stage 0, calibration and 2/3 probe splits
+MAIN_PROTOCOL = "circle-ae-final-gap-v1"  # independent 6/7 probe splits
 STAGE0_STEPS = 300
 SWEEP_STEPS = 3000
 
@@ -31,12 +33,17 @@ def canonical(config):
     return config
 
 
-def stage_configs(stage, base, rates):
+def stage_configs(stage, base, rates, *, shared_lr=False):
     """Return unique configs in execution order; zero noise has one identity."""
+    if shared_lr and stage != 1:
+        raise ValueError("Shared LR sensitivity is defined only for stage 1")
     if stage == 0:
         return [replace(base, radius=5, lr=rates["l2"], loss="l2", seed=0)]
     if stage == 1:
-        cells = [(r, "gaussian", 0., "target_only", ("l1", "l2")) for r in RADII]
+        losses = LOSSES if shared_lr else ("l1", "l2")
+        if shared_lr:
+            rates = dict.fromkeys(LOSSES, 1e-3)
+        cells = [(r, "gaussian", 0., "target_only", losses) for r in RADII]
     elif stage in (2, 3):
         radii = (5,) if stage == 2 else RADII
         cells = [(r, kind, level, "target_only", ("l1", "l2"))
@@ -48,9 +55,10 @@ def stage_configs(stage, base, rates):
                     cells.append((5, kind, .2, placement, ("l1", "l2")))
     else:
         raise ValueError("stage must be 0, 1, 2 or 3")
+    seeds = STAGE3_SEEDS if stage == 3 else SEEDS
     configs = (canonical(replace(base, radius=r, noise_type=kind, noise_level=level,
                                  placement=placement, loss=loss, lr=rates[loss], seed=seed))
-               for r, kind, level, placement, losses in cells for loss, seed in product(losses, SEEDS))
+               for r, kind, level, placement, losses in cells for loss, seed in product(losses, seeds))
     return list(dict.fromkeys(configs))
 
 
@@ -64,8 +72,18 @@ def digest(value):
                              allow_nan=False).encode()).hexdigest()
 
 
+def historical_config(config):
+    """An omitted gap denotes one frame in version-1 rows and checkpoints."""
+    record = asdict(config)
+    if record.get("frame_gap") == 1:
+        record.pop("frame_gap")
+    return record
+
+
 def identity(config, purpose, runtime):
-    return {"config": asdict(canonical(config)), "purpose": purpose, "runtime": runtime}
+    config = canonical(config)
+    record = asdict(config) if runtime.get("protocol") == MAIN_PROTOCOL else historical_config(config)
+    return {"config": record, "purpose": purpose, "runtime": runtime}
 
 
 def read_results(path=RUNS, repair=False):
@@ -109,7 +127,8 @@ def run_one(config, purpose, runtime, stage, rows, path):
         return
     print(f"run {key[:10]} {purpose} r={config.radius} {config.loss} lr={config.lr} "
           f"{config.noise_type}={config.noise_level} {config.placement} seed={config.seed}", flush=True)
-    outcome = run_experiment(config, device=runtime["device"], calibration=(purpose == "calibration"))
+    kwargs = {"probe_splits": (6, 7)} if runtime["protocol"] == MAIN_PROTOCOL else {}
+    outcome = run_experiment(config, device=runtime["device"], calibration=(purpose == "calibration"), **kwargs)
     row = {**spec, "config_hash": key, "first_stage": stage, **outcome}
     line = json.dumps(row, sort_keys=True, separators=(",", ":"), allow_nan=False)
     with path.open("ab") as stream:
@@ -167,6 +186,8 @@ def update_calibration_report(path, base, runtime, table):
 
 
 def add_design_arguments(parser):
+    parser.add_argument("--frame-gap", type=int, choices=(1, 2, 4, 8),
+                        help="explicit interval override; stages otherwise require a qualified gap")
     parser.add_argument("--latent-dim", type=int, choices=(4, 16, 64), default=16)
     parser.add_argument("--steps", type=int, default=None,
                         help=f"default: {SWEEP_STEPS} (stage 0: {STAGE0_STEPS})")
@@ -174,63 +195,93 @@ def add_design_arguments(parser):
     parser.add_argument("--foreground", type=float, default=1.)
 
 
-def base_config(args):
+def base_config(args, frame_gap=None):
     from training import Config
 
     steps = args.steps
     if steps is None:
         steps = STAGE0_STEPS if getattr(args, "stage", None) == 0 else SWEEP_STEPS
     return Config(latent_dim=args.latent_dim, background=args.background, foreground=args.foreground,
-                  steps=steps)
+                  steps=steps, frame_gap=frame_gap or getattr(args, "frame_gap", None) or 1)
+
+
+def runtime_info(device, *, historical=False):
+    import numpy
+    import torch
+    return {"protocol": PROTOCOL if historical else MAIN_PROTOCOL, "device": str(device),
+            "torch": str(torch.__version__), "numpy": numpy.__version__}
+
+
+def selection_runtime(runtime):
+    # Use the versions recorded in a selected plotting runtime, including on another host.
+    from gap_study import runtime_info as gap_runtime
+    return {**runtime, "protocol": gap_runtime(runtime["device"])["protocol"]}
+
+
+def chosen_gap(rows, runtime, override=None):
+    from gap_study import selected_gap
+    if override is not None:
+        return override
+    gap = selected_gap(rows, selection_runtime(runtime))
+    if gap is None:
+        raise ValueError("No frame gap passed the selection rule. See REPORT.md before choosing "
+                         "an explicit --frame-gap for a separate design.")
+    return gap
+
+
+def main_rates(base, runtime, rows):
+    from gap_study import selected_rates
+    return selected_rates(rows, selection_runtime(runtime), base.frame_gap)
 
 
 def main():
-    import numpy
-    import torch
     from training import resolve_device
-
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--stage", type=int, choices=range(4))
-    group.add_argument("--calibrate-only", action="store_true", help="measure three rates for each of four losses")
-    parser.add_argument("--dry-run", action="store_true", help="show design and counts without running training")
+    group.add_argument("--calibrate-only", action="store_true", help="historical reconstruction-loss pilots")
+    parser.add_argument("--shared-lr", action="store_true",
+                        help="stage 1 only: all four losses at the fixed learning rate 0.001")
+    parser.add_argument("--dry-run", action="store_true", help="show design and counts without training")
     parser.add_argument("--device", choices=("auto", "cpu", "cuda", "mps"), default="auto")
     add_design_arguments(parser)
     args = parser.parse_args()
-    base = base_config(args)
-    runtime = {"protocol": PROTOCOL, "device": str(resolve_device(args.device)),
-               "torch": str(torch.__version__), "numpy": numpy.__version__}
-    default_rates = dict.fromkeys(LOSSES, 1e-3)
+    if args.shared_lr and args.stage != 1:
+        parser.error("--shared-lr is defined only for stage 1")
+    historical = args.stage == 0 or args.calibrate_only
+    if historical and args.frame_gap not in (None, 1):
+        parser.error("historical stage 0 and reconstruction-loss pilots used --frame-gap 1")
+    runtime = runtime_info(resolve_device(args.device), historical=historical)
+    rows = read_results()
+    try:
+        gap = 1 if historical else chosen_gap(rows, runtime, args.frame_gap)
+        base = base_config(args, frame_gap=gap)
+        if historical:
+            table = calibration_table(base, runtime, rows)
+            rates = select_rates(table) if table else dict.fromkeys(LOSSES, 1e-3)
+        elif args.shared_lr:
+            rates = dict.fromkeys(LOSSES, 1e-3)
+        else:
+            rates = main_rates(base, runtime, rows)
+    except ValueError as exc:
+        parser.error(str(exc))
+    cases = calibration_configs(base) if args.calibrate_only else stage_configs(
+        args.stage, base, rates, shared_lr=args.shared_lr)
+    purpose = "calibration" if args.calibrate_only else "experiment"
+    todo = sum(digest(identity(c, purpose, runtime)) not in rows for c in cases)
+    print(f"{purpose}, stage={args.stage}, steps={base.steps}, frame_gap={gap}: "
+          f"{len(cases)} unique configs, {todo} remaining")
     if args.dry_run:
-        rows = read_results()
-        table = calibration_table(base, runtime, rows)
-        pilots = calibration_configs(base)
-        missing = sum(digest(identity(c, "calibration", runtime)) not in rows for c in pilots)
-        if args.calibrate_only or args.stage in (1, 2, 3):
-            print(f"LR calibration: {len(pilots)} trials, {missing} remaining")
-        if not args.calibrate_only:
-            cases = stage_configs(args.stage, base, select_rates(table) if table else default_rates)
-            print(f"stage {args.stage}: {len(cases)} unique configs")
-            if table or args.stage == 0:
-                todo = sum(digest(identity(c, "experiment", runtime)) not in rows for c in cases)
-                print(f"{todo} remaining")
         return
     RUNS.parent.mkdir(parents=True, exist_ok=True)
     with FileLock(str(RUNS) + ".lock"):
         rows = read_results(RUNS, repair=True)
-        if args.calibrate_only or args.stage in (1, 2, 3):
-            for config in calibration_configs(base):
-                run_one(config, "calibration", runtime, None, rows, RUNS)
-        table = calibration_table(base, runtime, rows)
-        if table:
-            update_calibration_report(REPORT, base, runtime, table)
+        if args.stage == 0 and table is None:
+            print("Stage 0 timing uses provisional L2 learning rate 0.001 (no complete calibration).")
+        for config in cases:
+            run_one(config, purpose, runtime, args.stage, rows, RUNS)
         if args.calibrate_only:
-            return
-        rates = select_rates(table) if table else default_rates
-        if table is None:
-            print("Stage 0 timing uses the provisional L2 learning rate 0.001 (no complete calibration).")
-        for config in stage_configs(args.stage, base, rates):
-            run_one(config, "experiment", runtime, args.stage, rows, RUNS)
+            update_calibration_report(REPORT, base, runtime, calibration_table(base, runtime, rows))
 
 
 if __name__ == "__main__":

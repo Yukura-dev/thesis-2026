@@ -4,8 +4,8 @@ from dataclasses import asdict
 
 import pytest
 
-from run_sweep import SWEEP_STEPS
-from training import Config, run_experiment
+from run_sweep import SWEEP_STEPS, read_results
+from training import Config, resolve_device, run_experiment
 
 
 @pytest.fixture(scope="module")
@@ -33,6 +33,21 @@ def test_repeatable_training(large_clean):
     print("Repeat fit verified:", second["model_sha256"])
 
 
-def test_large_clean_velocity(large_clean):
-    score = large_clean[2]["metrics"]["velocity_r2_mlp"]
+def test_large_clean_velocity():
+    """Fifth check: use the qualified gap and probe-selected L2 rate on fresh data."""
+    from gap_study import runtime_info, selected_gap, selected_rates
+    device = resolve_device(os.environ.get("AE_DEVICE", "auto"))
+    runtime = runtime_info(device)
+    rows = read_results()
+    try:
+        gap = selected_gap(rows, runtime)
+        if gap is None:
+            pytest.skip("未実行: no frame gap met the selection criteria")
+        rates = selected_rates(rows, runtime, gap)
+    except ValueError as exc:
+        pytest.skip(f"未実行: {exc}")
+    cfg = Config(radius=8, loss="l2", steps=SWEEP_STEPS, frame_gap=gap, lr=rates["l2"], seed=0)
+    result = run_experiment(cfg, device, probe_splits=(6, 7))
+    print("sanity_gap_fit", json.dumps({"config": asdict(cfg), **result}, sort_keys=True))
+    score = result["metrics"]["velocity_r2_mlp"]
     assert score > 0.8, f"Held-out velocity MLP R²={score:.6f} (required > 0.8)"

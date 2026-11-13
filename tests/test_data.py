@@ -63,3 +63,40 @@ def test_noise_placement_reproducibility_and_independence(kind, level):
         bg = both.clean == .3
         for val in (0., 1.):
             assert abs((both.input[bg] == val).mean() - level/2) < .004
+
+
+@pytest.mark.parametrize("frame_gap", [0, -1, 1.5, True])
+def test_frame_gap_requires_positive_integer(frame_gap):
+    from training import Config
+    with pytest.raises(ValueError, match="positive integer"):
+        MovieStream(0, radius=5, frame_gap=frame_gap)
+    with pytest.raises(ValueError, match="positive integer"):
+        Config(frame_gap=frame_gap)
+
+
+def test_gap8_observes_the_same_trajectory_including_reflections():
+    # Reconstruct the first eight one-frame transitions independently, without
+    # using the closed-form reflect() called by MovieStream.
+    sample = MovieStream(13, radius=5, frame_gap=8).sample(256)
+    default = MovieStream(13, radius=5).sample(256)
+    explicit_one = MovieStream(13, radius=5, frame_gap=1).sample(256)
+    np.testing.assert_array_equal(default.clean, explicit_one.clean)
+    np.testing.assert_array_equal(default.labels, explicit_one.labels)
+    np.testing.assert_array_equal(sample.labels, default.labels)
+    np.testing.assert_array_equal(sample.clean[:, 1], default.clean[:, 1])
+    center = sample.centers[:, 1].astype(np.float64)
+    velocity = -sample.labels[:, 2:4].astype(np.float64)
+    lo, hi = 4.5, 58.5
+    reflected = np.zeros(len(center), dtype=bool)
+    for _ in range(8):
+        center += velocity
+        left, right = center <= lo, center >= hi
+        reflected |= (left | right).any(axis=1)
+        center[left] = 2*lo - center[left]
+        center[right] = 2*hi - center[right]
+        velocity[left | right] *= -1
+    np.testing.assert_allclose(sample.centers[:, 0], center, atol=6e-6)
+    assert reflected.any() and (~reflected).any()
+    observed_speed = (sample.centers[:, 1] - sample.centers[:, 0]) / 8
+    np.testing.assert_allclose(observed_speed[~reflected], sample.labels[~reflected, 2:4], atol=1e-6)
+    assert np.max(np.abs(observed_speed[reflected] - sample.labels[reflected, 2:4])) > 1

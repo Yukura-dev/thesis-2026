@@ -115,13 +115,42 @@ class ImageMetrics:
                 "center_contrast": self.contrast / self.frames}
 
 
+class TemporalReconstruction:
+    """Test-pixel temporal change, with zero predicted change as the baseline."""
+    def __init__(self):
+        self.squared_truth = self.squared_prediction = self.squared_error = 0.0
+
+    def update(self, truth, prediction):
+        actual = np.subtract(truth[:, 1], truth[:, 0], dtype=np.float64)
+        predicted = np.subtract(prediction[:, 1], prediction[:, 0], dtype=np.float64)
+        self.squared_truth += np.square(actual).sum()
+        self.squared_prediction += np.square(predicted).sum()
+        self.squared_error += np.square(predicted - actual).sum()
+
+    def result(self):
+        if self.squared_truth == 0:
+            raise ValueError("Temporal change metrics need at least one changing pixel")
+        return {"r2_vs_zero_change": float(1 - self.squared_error / self.squared_truth),
+                "rms_ratio": float(np.sqrt(self.squared_prediction / self.squared_truth))}
+
+
+def validate_probe_splits(splits):
+    if (len(splits) != 2 or splits[0] == splits[1] or
+            any(isinstance(k, bool) or not isinstance(k, (int, np.integer)) or k < 2 for k in splits)):
+        raise ValueError("Probe splits must be two distinct integer namespaces >= 2 (0,1 are reserved)")
+    return tuple(splits)
+
+
 def evaluate(model, *, radius, noise_type="gaussian", noise_level=0.0,
              noise_placement="target_only", background=0.3, foreground=1.0,
-             device="cpu", batch_size=128, n_train=10000, n_test=5000):
+             device="cpu", batch_size=128, n_train=10000, n_test=5000, frame_gap=1,
+             temporal=False, probe_splits=(2, 3)):
     """Run both probes and reconstruction metrics once. No test data select weights."""
-    data_args = dict(radius=radius, noise_type=noise_type, noise_level=noise_level,
+    train_split, test_split = validate_probe_splits(probe_splits)
+    data_args = dict(radius=radius, noise_type=noise_type, noise_level=noise_level, frame_gap=frame_gap,
                      noise_placement=noise_placement, background=background, foreground=foreground)
     metrics = ImageMetrics()
+    changes = TemporalReconstruction() if temporal else None
 
     def collect(split, size, decode):
         stream = MovieStream(np.random.SeedSequence([split, 0]), **data_args)
@@ -134,10 +163,16 @@ def evaluate(model, *, radius, noise_type="gaussian", noise_level=0.0,
                 z_values.append(z.cpu().numpy())
                 labels.append(batch.labels)
                 if decode:
-                    metrics.update(model.decode(z).cpu().numpy(), batch, radius)
+                    reconstruction = model.decode(z).cpu().numpy()
+                    metrics.update(reconstruction, batch, radius)
+                    if changes is not None:
+                        changes.update(batch.clean, reconstruction)
         return np.concatenate(z_values), np.concatenate(labels)
 
     model.eval()
-    z_train, y_train = collect(2, n_train, False)
-    z_test, y_test = collect(3, n_test, True)
-    return {**metrics.result(), **fit_probes(z_train, y_train, z_test, y_test)}
+    z_train, y_train = collect(train_split, n_train, False)
+    z_test, y_test = collect(test_split, n_test, True)
+    result = {**metrics.result(), **fit_probes(z_train, y_train, z_test, y_test)}
+    if changes is not None:
+        result["temporal_reconstruction"] = changes.result()
+    return result

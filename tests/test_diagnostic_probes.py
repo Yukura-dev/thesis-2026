@@ -41,3 +41,21 @@ def test_centroid_uses_only_observed_brightness_and_correct_axis_order():
     image[0, 0, 21, 7] = 1.
     image[0, 1, 5, 8:10] = 1.
     np.testing.assert_allclose(raw_centers(image, .3), [[[7, 21], [8.5, 5]]])
+
+
+def test_endpoint_delta_uses_pixels_for_displacement_and_pixels_per_frame_for_velocity():
+    ends = np.array([[[10., 11.], [26., 19.]], [[12., 14.], [4., 30.]],
+                     [[17., 18.], [17., 10.]]])
+    speed = (ends[:, 1] - ends[:, 0]) / 8
+    expected = endpoint_scores(ends, ends, speed, frame_gap=8)
+    assert expected["delta_vs_velocity"]["rmse"] == expected["delta_vs_displacement"]["rmse"] == 0
+    wrong = endpoint_scores(ends, ends, speed, frame_gap=1)
+    assert wrong["delta_vs_velocity"]["rmse"] > 1
+
+
+def test_independent_probe_seeds_must_not_reuse_fit_or_validation_splits():
+    from evaluation import validate_probe_splits
+    for namespace in ((0, 3), (3, 1), (4, 4), (4., 5)):
+        with pytest.raises(ValueError):
+            validate_probe_splits(namespace)
+    assert validate_probe_splits((4, 5)) == (4, 5)

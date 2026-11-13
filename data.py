@@ -7,6 +7,11 @@ import numpy as np
 SIZE = 64
 
 
+def validate_frame_gap(frame_gap):
+    if isinstance(frame_gap, bool) or not isinstance(frame_gap, (int, np.integer)) or frame_gap < 1:
+        raise ValueError("frame_gap must be a positive integer number of frames")
+
+
 def reflect(position, velocity, dt, radius):
     """Advance a disk center; velocity is the outgoing velocity at an exact collision."""
     lo, hi = radius - 0.5, SIZE - 0.5 - radius
@@ -81,7 +86,9 @@ class Batch:
 
 class MovieStream:
     def __init__(self, seed, *, radius, noise_type="gaussian", noise_level=0.0,
-                 noise_placement="target_only", background=0.3, foreground=1.0):
+                 noise_placement="target_only", background=0.3, foreground=1.0, frame_gap=1):
+        validate_frame_gap(frame_gap)
+        self.frame_gap = int(frame_gap)
         if radius not in (1, 2, 3, 5, 8):
             raise ValueError("radius must be one of 1, 2, 3, 5, 8")
         if not (0 <= background <= 1 and 0 <= foreground <= 1):
@@ -106,6 +113,11 @@ class MovieStream:
         velocity = 6 * draw[:, 2:] - 3
         current, outgoing = reflect(previous, velocity, 1, self.radius)
         future, _ = reflect(current, outgoing, 5, self.radius)
+        # Anchor each gap to the same historical t-state so only the first
+        # observed frame changes. Time-reverse the reflecting trajectory to
+        # recover t-gap. Keep the original coordinates bit-for-bit for gap 1.
+        if self.frame_gap != 1:
+            previous, _ = reflect(current, -outgoing, self.frame_gap, self.radius)
         centers = np.stack((previous, current), axis=1)
         clean = disk_images(centers, self.radius, self.background, self.foreground)
         inputs = (noise(clean, self.input_rng, self.kind, self.level)

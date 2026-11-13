@@ -8,8 +8,8 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from data import MovieStream, SIZE
-from evaluation import ImageMetrics, grouped_r2, predict_probes
+from data import MovieStream, SIZE, validate_frame_gap
+from evaluation import ImageMetrics, TemporalReconstruction, grouped_r2, predict_probes, validate_probe_splits
 
 ROOT = Path(__file__).resolve().parent
 
@@ -28,14 +28,15 @@ def paired_scores(actual, predicted):
             "rmse": float(np.sqrt(mse.mean()))}
 
 
-def endpoint_scores(actual, predicted, velocities):
+def endpoint_scores(actual, predicted, velocities, frame_gap=1):
+    validate_frame_gap(frame_gap)
     actual = np.asarray(actual, dtype=np.float64).reshape(-1, 2, 2)
     predicted = np.asarray(predicted, dtype=np.float64).reshape(-1, 2, 2)
     delta = predicted[:, 1] - predicted[:, 0]
     return {"previous_position": paired_scores(actual[:, 0], predicted[:, 0]),
             "current_position": paired_scores(actual[:, 1], predicted[:, 1]),
             "delta_vs_displacement": paired_scores(actual[:, 1] - actual[:, 0], delta),
-            "delta_vs_velocity": paired_scores(velocities, delta)}
+            "delta_vs_velocity": paired_scores(velocities, delta / frame_gap)}
 
 
 def _batches(args, split, size, batch_size):
@@ -44,27 +45,9 @@ def _batches(args, split, size, batch_size):
         yield stream.sample(min(batch_size, size - start), need_target=False)
 
 
-class TemporalReconstruction:
-    """Test-pixel temporal change, with zero predicted change as the baseline."""
-    def __init__(self):
-        self.squared_truth = self.squared_prediction = self.squared_error = 0.0
-
-    def update(self, truth, prediction):
-        actual = np.subtract(truth[:, 1], truth[:, 0], dtype=np.float64)
-        predicted = np.subtract(prediction[:, 1], prediction[:, 0], dtype=np.float64)
-        self.squared_truth += np.square(actual).sum()
-        self.squared_prediction += np.square(predicted).sum()
-        self.squared_error += np.square(predicted - actual).sum()
-
-    def result(self):
-        if self.squared_truth == 0:
-            raise ValueError("Temporal change metrics need at least one changing pixel")
-        return {"r2_vs_zero_change": float(1 - self.squared_error / self.squared_truth),
-                "rms_ratio": float(np.sqrt(self.squared_prediction / self.squared_truth))}
-
-
-def evaluate_diagnostic(model, config, device):
+def evaluate_diagnostic(model, config, device, *, probe_splits=(2, 3)):
     """Fit historical six-output probes and separate four-output endpoint probes on z."""
+    train_split, test_split = validate_probe_splits(probe_splits)
     metrics = ImageMetrics()
     temporal = TemporalReconstruction()
 
@@ -74,7 +57,7 @@ def evaluate_diagnostic(model, config, device):
             with torch.inference_mode():
                 z = model.encode(torch.from_numpy(batch.input).to(device))
                 z_values.append(z.cpu().numpy())
-                if split == 3:
+                if split == test_split:
                     reconstruction = model.decode(z).cpu().numpy()
                     metrics.update(reconstruction, batch, config.radius)
                     temporal.update(batch.clean, reconstruction)
@@ -83,8 +66,8 @@ def evaluate_diagnostic(model, config, device):
         return tuple(np.concatenate(items) for items in (z_values, targets, ends))
 
     model.eval()
-    z, targets, ends = collect(2, config.probe_train)
-    z_test, targets_test, ends_test = collect(3, config.probe_test)
+    z, targets, ends = collect(train_split, config.probe_train)
+    z_test, targets_test, ends_test = collect(test_split, config.probe_test)
     original = predict_probes(z, targets, z_test)
     endpoints = predict_probes(z, ends, z_test)
     direct = metrics.result()
@@ -93,7 +76,7 @@ def evaluate_diagnostic(model, config, device):
         direct.update(grouped_r2(targets_test, predictions, method))
         by_target = {f"direct_{name}": paired_scores(targets_test[:, j:j+2], predictions[:, j:j+2])
                      for j, name in zip((0, 2, 4), ("position", "velocity", "future"))}
-        by_target.update(endpoint_scores(ends_test, endpoints[method], targets_test[:, 2:4]))
+        by_target.update(endpoint_scores(ends_test, endpoints[method], targets_test[:, 2:4], config.frame_gap))
         probe[method] = by_target
     return {"direct": direct, "probe": probe, "temporal_reconstruction": temporal.result()}
 
@@ -139,7 +122,7 @@ def fit_raw_ridge(args, features, count, batch_size):
     return lambda images: (features(images) - mean) / std @ weights + y_mean
 
 
-def raw_baseline():
+def raw_baseline(frame_gap=1):
     """Two supervised image-only readouts and an independent physical control.
 
     The primary ridge learns one free weight per pixel in each input frame.
@@ -147,7 +130,8 @@ def raw_baseline():
     block. Neither readout receives centers or displacement. The independent
     centroid calculation illustrates ambiguity when motion reflects at a wall.
     """
-    args = dict(radius=5, noise_type="gaussian", noise_level=0.0, noise_placement="target_only",
+    validate_frame_gap(frame_gap)
+    args = dict(radius=5, frame_gap=frame_gap, noise_type="gaussian", noise_level=0.0, noise_placement="target_only",
                 background=0.3, foreground=1.0)
     n_train, n_test, batch_size = 10000, 5000, 128
     full = fit_raw_ridge(args, lambda imgs: imgs.reshape(len(imgs), -1), n_train, batch_size)
@@ -165,7 +149,7 @@ def raw_baseline():
     # Record reflection incidence and the effect of the true-position difference
     # itself as a predictor of outgoing velocity. Tolerance only absorbs float32
     # rounding when subtracting two positions (order 64) to obtain a velocity.
-    reflected = (np.abs(delta - velocities) > 1e-5).any(axis=1)
+    reflected = (np.abs(delta / frame_gap - velocities) > 1e-5).any(axis=1)
     return {"protocol": "clean-two-frame-raw-control-v1", "config": args,
             "train_count": n_train, "test_count": n_test, "batch_size": batch_size,
             "train_seed_sequence": [2, 0], "test_seed_sequence": [3, 0],
@@ -177,8 +161,8 @@ def raw_baseline():
                         "torch": str(torch.__version__), "platform": platform.platform(), "device": "cpu"},
             "velocity_from_raw_pixels": paired_scores(velocities, np.concatenate(predictions)),
             "velocity_from_2x2_pooled_pixels": paired_scores(velocities, np.concatenate(pooled_predictions)),
-            "image_centroid_control": endpoint_scores(ends, np.concatenate(centroid_estimates), velocities),
-            "true_delta_vs_velocity": paired_scores(velocities, delta),
+            "image_centroid_control": endpoint_scores(ends, np.concatenate(centroid_estimates), velocities, frame_gap),
+            "true_delta_vs_velocity": paired_scores(velocities, delta / frame_gap),
             "test_examples_reflected_between_frames": int(reflected.sum()),
             "displacement_coordinate_rms": float(np.sqrt(np.square(delta).mean())),
             "velocity_coordinate_rms": float(np.sqrt(np.square(velocities, dtype=np.float64).mean()))}
@@ -187,9 +171,14 @@ def raw_baseline():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the clean r=5 raw-image velocity reference")
     parser.add_argument("--raw-baseline", required=True, action="store_true")
-    parser.add_argument("--output", type=Path, default=ROOT / "results" / "raw_velocity_baseline.json")
+    parser.add_argument("--frame-gap", type=int, default=1)
+    parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    result = raw_baseline()
+    if args.output is None:
+        name = ("raw_velocity_baseline.json" if args.frame_gap == 1
+                else f"raw_velocity_baseline_gap{args.frame_gap}.json")
+        args.output = ROOT / "results" / name
+    result = raw_baseline(args.frame_gap)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\n")
     print(f"Saved {args.output}: raw image velocity R² {result['velocity_from_raw_pixels']['r2']:.6f}")

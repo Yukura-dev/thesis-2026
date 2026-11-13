@@ -13,8 +13,8 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from data import MovieStream
-from evaluation import evaluate
+from data import MovieStream, validate_frame_gap
+from evaluation import evaluate, validate_probe_splits
 
 
 @dataclass(frozen=True)
@@ -33,8 +33,10 @@ class Config:
     foreground: float = 1.0
     probe_train: int = 10000
     probe_test: int = 5000
+    frame_gap: int = 1
 
     def __post_init__(self):
+        validate_frame_gap(self.frame_gap)
         if self.radius not in (1, 2, 3, 5, 8) or self.latent_dim not in (4, 16, 64):
             raise ValueError("Unsupported radius or latent dimension")
         if self.loss not in ("l1", "l2", "huber", "charbonnier"):
@@ -58,7 +60,8 @@ class Config:
 
     def movie_kwargs(self):
         return dict(radius=self.radius, noise_type=self.noise_type, noise_level=self.noise_level,
-                    noise_placement=self.placement, background=self.background, foreground=self.foreground)
+                    noise_placement=self.placement, background=self.background, foreground=self.foreground,
+                    frame_gap=self.frame_gap)
 
 
 class Autoencoder(nn.Module):
@@ -205,12 +208,17 @@ def _parameter_digest(model):
     return digest.hexdigest()
 
 
-def run_experiment(config: Config, device="auto", *, calibration=False):
+def run_experiment(config: Config, device="auto", *, calibration=False, diagnostic=False,
+                   temporal=False, probe_splits=(2, 3)):
     """Train once. Calibration omits test probes and returns the selection loss.
 
     Total wall time includes setup, validation and parameter hashing. All GPU phase
     boundaries synchronize pending work. Memory peaks refer to this invocation.
     """
+    if not calibration:
+        validate_probe_splits(probe_splits)
+    if calibration and (diagnostic or temporal):
+        raise ValueError("Calibration-only omits probes; use diagnostic/temporal to score velocity.")
     start = time.perf_counter()
     device = resolve_device(device)
     _configure(config.seed)
@@ -240,15 +248,25 @@ def run_experiment(config: Config, device="auto", *, calibration=False):
             raise FloatingPointError(f"Validation loss is nonfinite: {validation_loss}")
         _sync(device)
         evaluation_start = time.perf_counter()
-        metrics = {} if calibration else evaluate(
-            model, **config.movie_kwargs(), device=device, batch_size=config.batch_size,
-            n_train=config.probe_train, n_test=config.probe_test)
+        metrics, extra = {}, {}
+        if diagnostic:
+            from diagnostic_probes import evaluate_diagnostic
+            extra = evaluate_diagnostic(model, config, device, probe_splits=probe_splits)
+            metrics = extra.pop("direct")
+        elif not calibration:
+            metrics = evaluate(model, **config.movie_kwargs(), device=device, batch_size=config.batch_size,
+                               n_train=config.probe_train, n_test=config.probe_test, temporal=temporal,
+                               probe_splits=probe_splits)
+            if temporal:
+                extra["temporal_reconstruction"] = metrics.pop("temporal_reconstruction")
+        if not calibration and (diagnostic or temporal or tuple(probe_splits) != (2, 3)):
+            extra["probe_splits"] = list(probe_splits)
         _sync(device)
         evaluation_end = time.perf_counter()
         model_hash = _parameter_digest(model)
     return {
         "device": str(device), "model_sha256": model_hash, "last_train_loss": last_train_loss,
-        "validation_loss": validation_loss, "metrics": metrics, "memory": memory.result(),
+        "validation_loss": validation_loss, "metrics": metrics, "memory": memory.result(), **extra,
         "timing": {"train_seconds": train_end - train_start,
                    "validation_seconds": evaluation_start - train_end,
                    "evaluation_seconds": evaluation_end - evaluation_start,

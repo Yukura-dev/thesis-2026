@@ -1,6 +1,6 @@
 """Clean r=5 L2 step-budget diagnosis. Train once per seed, evaluate four checkpoints."""
 import argparse
-from dataclasses import asdict, replace
+from dataclasses import replace
 import json
 import os
 from pathlib import Path
@@ -11,7 +11,7 @@ import numpy as np
 import torch
 
 from data import MovieStream
-from run_sweep import RUNS, digest, identity, read_results
+from run_sweep import RUNS, digest, historical_config, identity, read_results
 from training import (Autoencoder, Config, _configure, _parameter_digest, _sync,
                       reconstruction_loss, resolve_device)
 
@@ -46,7 +46,7 @@ def save_checkpoint(path, state):
 def load_checkpoint(path, runtime, config):
     state = torch.load(path, map_location="cpu", weights_only=True)
     if (state["runtime"] != runtime or
-            state["config"] != asdict(replace(config, steps=state["step"]))):
+            historical_config(Config(**state["config"])) != historical_config(replace(config, steps=state["step"]))):
         raise ValueError(f"Checkpoint configuration mismatch: {path}")
     return state
 
@@ -79,7 +79,7 @@ def capture_rng(stream, device):
 def original_stage0(config, device):
     for row in read_results(RUNS).values():
         if (row["purpose"] == "experiment" and row["first_stage"] == 0 and
-                row["device"] == str(device) and row["config"] == asdict(config) and
+                row["device"] == str(device) and row["config"] == historical_config(config) and
                 row["runtime"]["torch"] == str(torch.__version__) and
                 row["runtime"]["numpy"] == np.__version__):
             return row
@@ -135,7 +135,7 @@ def train_to(config, device, runtime):
         last_loss = loss.item()
         if not np.isfinite(last_loss):
             raise FloatingPointError(f"Nonfinite loss at step {step}")
-        state = {"runtime": runtime, "config": asdict(cfg), "model": model.state_dict(),
+        state = {"runtime": runtime, "config": historical_config(cfg), "model": model.state_dict(),
                  "optimizer": optimizer.state_dict(), "step": step, "train_seconds": elapsed,
                  "last_train_loss": last_loss, "model_sha256": model_hash, **capture_rng(stream, device)}
         save_checkpoint(target if step == config.steps else latest, state)
