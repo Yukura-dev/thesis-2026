@@ -40,7 +40,7 @@ def summaries(rows):
 
 def write_csv(path, records):
     with path.open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.DictWriter(stream, fieldnames=tuple(records[0]))
+        writer = csv.DictWriter(stream, fieldnames=tuple(records[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(records)
 
