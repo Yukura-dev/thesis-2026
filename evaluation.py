@@ -73,8 +73,9 @@ def fit_probes(z_train, y_train, z_test, y_test):
 
 class ImageMetrics:
     """Pool clean errors over pixels; average reconstruction contrasts over frames."""
-    def __init__(self, *, include_center_intensity=False):
+    def __init__(self, *, include_center_intensity=False, include_frame_centers=False):
         self.include_center_intensity = include_center_intensity
+        self.frame_center_sums = np.zeros(2, dtype=np.float64) if include_frame_centers else None
         self.center_sum = 0.0
         self.squared_error = self.object_error = self.background_error = 0.0
         self.object_pixels = self.background_pixels = self.frames = 0
@@ -108,6 +109,8 @@ class ImageMetrics:
                   dy * ((1 - dx) * images[k, y + 1, x] + dx * images[k, y + 1, x + 1]))
         if self.include_center_intensity:
             self.center_sum += float(center.sum())
+        if self.frame_center_sums is not None:
+            self.frame_center_sums += center.reshape(-1, 2).sum(axis=0, dtype=np.float64)
         self.contrast += float((center - background).sum())
         self.frames += len(images)
 
@@ -119,6 +122,10 @@ class ImageMetrics:
                 "center_contrast": self.contrast / self.frames}
         if self.include_center_intensity:
             result["center_intensity"] = self.center_sum / self.frames
+        if self.frame_center_sums is not None:
+            previous, current = self.frame_center_sums / (self.frames // 2)
+            result["center_intensity_previous"] = float(previous)
+            result["center_intensity_current"] = float(current)
         return result
 
 
