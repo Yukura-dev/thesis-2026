@@ -1,0 +1,168 @@
+{
+  "status": "PASS",
+  "scope": "Final J/K/L only; earlier records unchanged; no further experiments.",
+  "tests": {
+    "command": "python -m pytest -q --ignore=tests/test_training.py",
+    "passed": 103,
+    "note": "Historical autoencoder-training tests were not rerun. Default-initialization hashes and pre-change short CPU training outputs are covered by the initialization tests."
+  },
+  "independent_checks": {
+    "J": {
+      "status": "PASS",
+      "independent_design": true,
+      "collector_imported": false,
+      "unique_models": 514,
+      "memberships": 550,
+      "conditions": 118,
+      "baseline_references": 25,
+      "scalar_model_metric_checks": 12834,
+      "distribution_statistic_checks": 378,
+      "borderline_models": 13,
+      "h_rule_changed": 1,
+      "heatmap_cells": 50,
+      "tied_cells": 0,
+      "png_size": [
+        2340,
+        1206
+      ]
+    },
+    "K_aggregate": {
+      "status": "PASS",
+      "producer_or_collector_imported": false,
+      "independently_enumerated_endpoints": 120,
+      "independent_trajectory_points": 320,
+      "endpoint_conditions": 24,
+      "trajectory_conditions": 64,
+      "endpoint_and_trajectory_metric_checks": 2120,
+      "aggregate_statistics_checked": 1272,
+      "initial_sha_groups": 10,
+      "motion_stream_equal_groups": 20,
+      "csv_files": 4
+    },
+    "K_checkpoints": {
+      "adam_nonzero_step_states_checked": 6480,
+      "audit": "independent K checkpoints",
+      "audit_seconds": 1.3641510419547558,
+      "checkpoints_checked": 320,
+      "endpoints_checked": 80,
+      "historical_untrained_records_checked": 25,
+      "initial_comparisons": [
+        {
+          "a_final_bias_zero": true,
+          "a_initial_sha256": "1c8f58f1fbb48ee0a724e5d2824ebbc9094952ec1d9930558e6bbe5e135733a2",
+          "b_final_bias_nonzero": true,
+          "b_initial_sha256": "f6474536277a4dd6144fbabb1f4b3295217f33741efefbb3666fb526c425e655",
+          "differing_parameter_names": [
+            "decoder.9.bias"
+          ],
+          "final_weights_unscaled_and_identical": true,
+          "frozen_default_sha256": "27c2ee7bf3d878ac04582904e89a31690443c461aa5f7afcc1b823881d029233",
+          "reconstructed_default_sha256": "27c2ee7bf3d878ac04582904e89a31690443c461aa5f7afcc1b823881d029233",
+          "seed": 0,
+          "torch_and_device_rng_identical": true
+        },
+        {
+          "a_final_bias_zero": true,
+          "a_initial_sha256": "943855190c8596630387369c1dffd2d1856253c0a09e09ebaa315896161c5c07",
+          "b_final_bias_nonzero": true,
+          "b_initial_sha256": "8ef278c2495d8a49452ac81b056084b72b394135773b468f8f0821ae42721412",
+          "differing_parameter_names": [
+            "decoder.9.bias"
+          ],
+          "final_weights_unscaled_and_identical": true,
+          "frozen_default_sha256": "9cfca29deeb54bc461a8b88cdf44faff9d461e8facc984c299066668e0c5d2e3",
+          "reconstructed_default_sha256": "9cfca29deeb54bc461a8b88cdf44faff9d461e8facc984c299066668e0c5d2e3",
+          "seed": 1,
+          "torch_and_device_rng_identical": true
+        },
+        {
+          "a_final_bias_zero": true,
+          "a_initial_sha256": "2ecfda7ac28bccd2affa3d2aaafd43cd6b9674644687445a4e07985ff636cbd0",
+          "b_final_bias_nonzero": true,
+          "b_initial_sha256": "022b84da214ba5ac940ed8bd9d41a51ccda1dfe09303990515fd09a212470689",
+          "differing_parameter_names": [
+            "decoder.9.bias"
+          ],
+          "final_weights_unscaled_and_identical": true,
+          "frozen_default_sha256": "f15e4c7d0f9bc12fe22417a5b0d5cd22ab58c041d24b8a8f2fcd9d664f144523",
+          "reconstructed_default_sha256": "f15e4c7d0f9bc12fe22417a5b0d5cd22ab58c041d24b8a8f2fcd9d664f144523",
+          "seed": 2,
+          "torch_and_device_rng_identical": true
+        },
+        {
+          "a_final_bias_zero": true,
+          "a_initial_sha256": "38df2d4fc88807a86ac6ce9fd005fe791877608b0f7054731b46275d8820e97f",
+          "b_final_bias_nonzero": true,
+          "b_initial_sha256": "00a1cd2e9ec995aecfa5efd4d2d09f7e8e84a456c03b496e34e36cf613a06601",
+          "differing_parameter_names": [
+            "decoder.9.bias"
+          ],
+          "final_weights_unscaled_and_identical": true,
+          "frozen_default_sha256": "216d7249c342d97a8a8e047e4fec96f3f95f5e5fb13f2f740d56301a4b008c61",
+          "reconstructed_default_sha256": "216d7249c342d97a8a8e047e4fec96f3f95f5e5fb13f2f740d56301a4b008c61",
+          "seed": 3,
+          "torch_and_device_rng_identical": true
+        },
+        {
+          "a_final_bias_zero": true,
+          "a_initial_sha256": "682c8c82a4eef2736fb8ae9910863d9ae314c4a67bf6a65127e5953c98c260b2",
+          "b_final_bias_nonzero": true,
+          "b_initial_sha256": "fe89fd63417830b8079da0d4b3fd3e3cb767bc6685ab3c46f6167674fb798b93",
+          "differing_parameter_names": [
+            "decoder.9.bias"
+          ],
+          "final_weights_unscaled_and_identical": true,
+          "frozen_default_sha256": "39df29ab55b897ab9f098806d6e40dc188913e9a04a3c2fcfe3e28885e6ec685",
+          "reconstructed_default_sha256": "39df29ab55b897ab9f098806d6e40dc188913e9a04a3c2fcfe3e28885e6ec685",
+          "seed": 4,
+          "torch_and_device_rng_identical": true
+        }
+      ],
+      "initial_groups_checked": 10,
+      "initial_states_per_variant_seed": 8,
+      "input_writes_performed": false,
+      "limitation": "The saved tensors prove parameter relations; variant-b input/output background offsets are functional code behavior, already covered by producer tests, and are not re-executed here.",
+      "no_forward_or_backward": true,
+      "no_model_construction": true,
+      "no_training": true,
+      "paired_data_stream_groups_checked": 20,
+      "status": "PASS",
+      "trajectory_records_checked": 320
+    },
+    "L": {
+      "status": "PASS",
+      "models": 10,
+      "layer_rows": 80,
+      "full_array_sd_crosschecks": 10,
+      "largest_sd_absolute_error": 1.3877787807814457e-17,
+      "largest_torch_norm_absolute_error": 9.237055564881302e-14,
+      "no_training": true,
+      "streaming_accumulator_imported": false
+    },
+    "preservation": {
+      "status": "PASS",
+      "prior_result_and_figure_files_unchanged": 77,
+      "prior_ledger_rows_unchanged": 1049,
+      "new_K_endpoints": 80,
+      "prior_report_bytes_preserved": 138927,
+      "prior_readme_lines_preserved": 222,
+      "complete": true,
+      "final_report": true
+    }
+  },
+  "completed_K_rerun": {
+    "skipped": 80,
+    "additional_training": false,
+    "ledger_and_trajectory_byte_hashes_unchanged": true
+  },
+  "sha256": {
+    "results/runs.jsonl": "8b262c19fbb5f06f60edb9b48daed653329bf3d147052ff1fd56f44a3e33a444",
+    "results/frame_classification_measurements.jsonl": "a7edf6402d31fb5b96d0d202cdcb1d91ea4707571ac3fb0b1c325a5768174226",
+    "results/frame_classification/summary.json": "55b2f05be78d233cc6901c4d70de249851445ab8f1a1b3f6bf16df7d2e17b083",
+    "results/frame_classification/a_modal_classes.png": "79973eb8001be4a6a74ff0f199fa13daa3ca642822a448dc922c03cfb7ff00e2",
+    "results/initialization_trajectory.jsonl": "beb2274c979f994036ecbd130962315b5dd1ce732bb6f16014be53823b64c325",
+    "results/final_jkl/k/summary.json": "a9df89fd1162b3ba0f0e0e8531f9c19e5d863c0b6d46542f9c2d2c8bc70d6073",
+    "results/decoder_diagnostic.jsonl": "3c64636da9caa9ea9cba9dd4f80159def11eddfa31b143727c707f7539898b59",
+    "REPORT.md": "232ce0b040a555f35823ae3aecb5b703f12fe81cbeb08a8b78a386e035d7b0fa"
+  }
+}
