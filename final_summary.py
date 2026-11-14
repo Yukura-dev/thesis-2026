@@ -446,7 +446,8 @@ def write_outputs(summary, out):
         csv_write(out / filename, rows, rows[0].keys() if rows else fallback)
     rows = list(flat_conditions(summary["G"]["paired_conditions"]))
     csv_write(out / "g_paired_conditions.csv", rows, list(dict.fromkeys(k for row in rows for k in row)))
-    (out / "tables.md").write_text(markdown(summary))
+    # The standalone table links to its sibling CSV files; REPORT uses root paths.
+    (out / "tables.md").write_text(markdown(summary).replace("(results/final_gh/", "("))
 
 
 def rescore_h_zero(device="mps"):
