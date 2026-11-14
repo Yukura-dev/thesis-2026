@@ -4,7 +4,7 @@ import pytest
 
 from classification_summary import (
     CLASSES, LEVELS, PROBES, RADII, condition_counts, expanded_memberships,
-    heatmap_data, modal_class, probe_distribution, unique_records,
+    heatmap_data, markdown, modal_class, probe_distribution, unique_records,
 )
 from frame_classification import analysis_loss, classify_measurement
 
@@ -83,3 +83,30 @@ def test_condition_counts_preserve_control_role_and_missing_seeds():
     assert Counter(r["role"] for r in result) == {"primary": 1, "target_only_control": 1}
     assert all(r["observed_seeds"] == [0, 1, 2, 3] and r["expected_seeds"] == list(range(5)) for r in result)
     assert all(not r["complete"] and r["background_only"] == 4 for r in result)
+
+
+def test_h_markdown_distinguishes_shared_background_texture_from_target_noise():
+    base = dict(arm="H", role="primary", radius=8, noise_type="gaussian", noise_level=0.,
+                placement="target_only", method="standard", analysis_loss="l2", n=5,
+                expected_seeds=list(range(5)), **dict.fromkeys(CLASSES, 0))
+    cells = [{**base, "background_texture_sd": .4},
+             {**base, "background_texture_sd": 0., "role": "flat_control"},
+             {**base, "background_texture_sd": 0., "arm": "A", "noise_level": .4}]
+    summary = dict(measured_models=15, condition_counts=cells, probe_distributions=[],
+                   borderline=[], h_rule_comparison=[])
+    text = markdown(summary)
+    h_lines = [line for line in text.splitlines() if line.startswith("| H |")]
+    assert len(h_lines) == 2
+    assert "なし（背景模様） | 背景SD 0.4 | 入力・教師で共通" in h_lines[0]
+    assert "なし（平坦背景） | 背景SD 0 | 入力・教師で共通" in h_lines[1]
+    assert all("gaussian" not in line and "target_only" not in line for line in h_lines)
+    assert "| A | primary | 8 | gaussian | 0.4 | target_only |" in text
+    # The display-only translation must not change source configuration fields.
+    assert all(row["noise_type"] == "gaussian" and row["placement"] == "target_only" for row in cells)
+    summary["borderline"] = [{**cells[0], "memberships": [{"arm": "H", "role": "primary"}],
+                               "seed": 0, "center_intensity_previous": .64, "center_intensity_current": .65,
+                               "signed_margin_previous": -.01, "signed_margin_current": 0.,
+                               "classification": "current_only", "source_config_hash": "source"}]
+    borderline_line = next(line for line in markdown(summary).splitlines() if line.startswith("| H | 8 |"))
+    assert "なし（背景模様） | 0.4 | 入力・教師で共通" in borderline_line
+    assert "gaussian" not in borderline_line and "target_only" not in borderline_line

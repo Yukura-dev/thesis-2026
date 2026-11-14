@@ -260,7 +260,10 @@ def markdown(summary):
     for row in summary["condition_counts"]:
         amount = row["background_texture_sd"] if row["arm"] == "H" else row["noise_level"]
         method = row["method"] if row["arm"] == "G" else row["analysis_loss"]
-        rows.append(f"| {row['arm']} | {row['role']} | {row['radius']} | {row['noise_type']} | {amount:g} | {row['placement']} | {method} | {row['n']} / {len(row['expected_seeds'])} | " + " | ".join(str(row[c]) for c in CLASSES) + " |")
+        noise = ("なし（背景模様）" if amount else "なし（平坦背景）") if row["arm"] == "H" else row["noise_type"]
+        placement = "入力・教師で共通" if row["arm"] == "H" else row["placement"]
+        amount_label = f"背景SD {amount:g}" if row["arm"] == "H" else f"{amount:g}"
+        rows.append(f"| {row['arm']} | {row['role']} | {row['radius']} | {noise} | {amount_label} | {placement} | {method} | {row['n']} / {len(row['expected_seeds'])} | " + " | ".join(str(row[c]) for c in CLASSES) + " |")
     rows += ["", "プローブ値は中央値 [最小, 最大]。未学習参照は半径別5シードで、損失・再構成分類は適用しない。", "",
              "| 母集団 | 損失 | 再構成分類 | r | n | 位置MLP R² | 速度MLP R² | 未来MLP R² |",
              "|---|---|---|---|---:|---:|---:|---:|"]
@@ -281,7 +284,10 @@ def markdown(summary):
         for row in summary["borderline"]:
             arms = "/".join(m["arm"] for m in row["memberships"])
             method = row["method"] if row["method"] != "standard" else row["analysis_loss"]
-            rows.append(f"| {arms} | {row['radius']} | {row['noise_type']} {row['noise_level']:g} | {row['background_texture_sd']:g} | {row['placement']} | {method} | {row['seed']} | {row['center_intensity_previous']:.5f} | {row['center_intensity_current']:.5f} | {row['signed_margin_previous']:.5f} | {row['signed_margin_current']:.5f} | {CLASS_JA[row['classification']]} | {row['source_config_hash'][:12]} |")
+            is_h = any(m["arm"] == "H" for m in row["memberships"])
+            noise = ("なし（背景模様）" if row["background_texture_sd"] else "なし（平坦背景）") if is_h else f"{row['noise_type']} {row['noise_level']:g}"
+            placement = "入力・教師で共通" if is_h else row["placement"]
+            rows.append(f"| {arms} | {row['radius']} | {noise} | {row['background_texture_sd']:g} | {placement} | {method} | {row['seed']} | {row['center_intensity_previous']:.5f} | {row['center_intensity_current']:.5f} | {row['signed_margin_previous']:.5f} | {row['signed_margin_current']:.5f} | {CLASS_JA[row['classification']]} | {row['source_config_hash'][:12]} |")
         rows.append("")
     changed = [row for row in summary["h_rule_comparison"] if row["class_changed_from_raw_rule"]]
     if changed:
