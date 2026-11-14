@@ -35,12 +35,38 @@ def canonical(config):
     return config
 
 
+def stage3_arms(base, rates):
+    """Replacement design. Arm D reuses target-only controls with the same AE seeds."""
+    if not base.reject_reflections or base.frame_gap != 4 or base.steps != 3000 or base.latent_dim != 16:
+        raise ValueError("Stage 3 uses the filtered Δ=4, z=16, 3,000-step protocol")
+    if base.background != .3 or base.foreground != 1.:
+        raise ValueError("Stage 3 sets foreground by arm and uses background 0.3")
+    if any(rates[loss] != .003 for loss in ("l1", "l2")):
+        raise ValueError("Stage 3 uses the selected L1 and L2 learning rates of 0.003")
+
+    def cases(radii, levels, foreground, placements, seeds):
+        return [canonical(replace(base, radius=r, foreground=foreground, noise_type=kind,
+                                  noise_level=level, placement=where, loss=loss, lr=rates[loss], seed=seed))
+                for r, (kind, level), where, loss, seed in
+                product(radii, levels, placements, ("l1", "l2"), seeds)]
+
+    gaussian = [("gaussian", level) for level in LEVELS["gaussian"]]
+    return {
+        "A": cases(RADII, gaussian, 1., ("target_only",), SEEDS),
+        "B": cases(RADII, [("salt_pepper", .2), ("salt_pepper", .45)], 1., ("target_only",), SEEDS[:3]),
+        "C": cases((5,), gaussian, .65, ("target_only",), SEEDS),
+        "D": cases((5,), [("gaussian", .4), ("salt_pepper", .2)], 1., ("input_only", "both"), SEEDS),
+    }
+
+
 def stage_configs(stage, base, rates, *, shared_lr=False):
     """Return unique configs in execution order; zero noise has one identity."""
     if shared_lr and stage != 1:
         raise ValueError("Shared LR sensitivity is defined only for stage 1")
     if stage == 0:
         return [replace(base, radius=5, lr=rates["l2"], loss="l2", seed=0)]
+    if stage == 3 and base.reject_reflections:
+        return list(dict.fromkeys(cfg for arm in stage3_arms(base, rates).values() for cfg in arm))
     if stage == 1:
         losses = LOSSES if shared_lr else ("l1", "l2")
         if shared_lr:
@@ -141,6 +167,14 @@ def run_one(config, purpose, runtime, stage, rows, path):
     kwargs = {}
     if runtime["protocol"] in (MAIN_PROTOCOL, FILTERED_PROTOCOL):
         kwargs["probe_splits"] = (8, 9) if purpose == SANITY_PURPOSE else (6, 7)
+    if stage == 3 and runtime["protocol"] == FILTERED_PROTOCOL:
+        from diagnose_steps import save_checkpoint
+        cache = ROOT / "checkpoints" / "stage3" / key / "weights.pt"
+
+        def persist(model):
+            save_checkpoint(cache, {"source_config_hash": key, "model": model.state_dict()})
+
+        kwargs.update(affine=True, store_weights=persist)
     outcome = run_experiment(config, device=runtime["device"], calibration=(purpose == "calibration"), **kwargs)
     row = {**spec, "config_hash": key, "first_stage": stage, **outcome}
     if purpose == SANITY_PURPOSE:
@@ -300,6 +334,11 @@ def main():
     add_design_arguments(parser)
     args = parser.parse_args()
     historical = args.stage == 0 or args.calibrate_only
+    if args.stage == 3 and args.reject_reflections is False:
+        parser.error("Replacement stage 3 requires the sampler that rejects observed wall hits")
+    if args.stage == 3 and (args.steps not in (None, SWEEP_STEPS) or args.latent_dim != 16 or
+                            args.background != .3 or args.foreground != 1.):
+        parser.error("Stage 3 fixes model size, budget and intensities by arm")
     if args.filtered_sanity and args.reject_reflections is False:
         parser.error("--filtered-sanity requires the sampler that rejects observed wall hits")
     if args.reject_reflections is None:

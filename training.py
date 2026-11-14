@@ -212,7 +212,7 @@ def _parameter_digest(model):
 
 
 def run_experiment(config: Config, device="auto", *, calibration=False, diagnostic=False,
-                   temporal=False, probe_splits=(2, 3)):
+                   temporal=False, probe_splits=(2, 3), affine=False, store_weights=None):
     """Train once. Calibration omits test probes and returns the selection loss.
 
     Total wall time includes setup, validation and parameter hashing. All GPU phase
@@ -259,7 +259,7 @@ def run_experiment(config: Config, device="auto", *, calibration=False, diagnost
         elif not calibration:
             metrics = evaluate(model, **config.movie_kwargs(), device=device, batch_size=config.batch_size,
                                n_train=config.probe_train, n_test=config.probe_test, temporal=temporal,
-                               probe_splits=probe_splits)
+                               probe_splits=probe_splits, affine=affine)
             if temporal:
                 extra["temporal_reconstruction"] = metrics.pop("temporal_reconstruction")
         if not calibration and (diagnostic or temporal or tuple(probe_splits) != (2, 3)):
@@ -269,6 +269,8 @@ def run_experiment(config: Config, device="auto", *, calibration=False, diagnost
         _sync(device)
         evaluation_end = time.perf_counter()
         model_hash = _parameter_digest(model)
+        if store_weights is not None:
+            store_weights(model)
     return {
         "device": str(device), "model_sha256": model_hash, "last_train_loss": last_train_loss,
         "validation_loss": validation_loss, "metrics": metrics, "memory": memory.result(), **extra,

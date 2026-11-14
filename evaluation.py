@@ -129,6 +129,35 @@ class ImageMetrics:
         return result
 
 
+class AffineMoments:
+    """Float64 pooled centered second moments; one scalar transform over both frames and all pairs."""
+    def __init__(self):
+        self.n = 0
+        self.x_mean = self.y_mean = self.sxx = self.sxy = 0.
+
+    def update(self, output, clean):
+        x, y = np.asarray(output, dtype=np.float64), np.asarray(clean, dtype=np.float64)
+        if x.shape != y.shape or not x.size:
+            raise ValueError("Require paired nonempty reconstruction and clean arrays")
+        n = x.size
+        xm, ym = x.mean(), y.mean()
+        dx, dy = xm - self.x_mean, ym - self.y_mean
+        total = self.n + n
+        between = self.n * n / total
+        xc = x - xm
+        self.sxx += float(np.square(xc).sum() + dx * dx * between)
+        self.sxy += float(np.sum(xc * (y - ym)) + dx * dy * between)
+        self.x_mean += dx * n / total
+        self.y_mean += dy * n / total
+        self.n = total
+
+    def coefficients(self):
+        if not self.n:
+            raise ValueError("No test pixels")
+        a = self.sxy / self.sxx if self.sxx > 0 else 0.
+        return a, self.y_mean - a * self.x_mean
+
+
 class TemporalReconstruction:
     """Test-pixel temporal change, with zero predicted change as the baseline."""
     def __init__(self):
@@ -158,14 +187,15 @@ def validate_probe_splits(splits):
 def evaluate(model, *, radius, noise_type="gaussian", noise_level=0.0,
              noise_placement="target_only", background=0.3, foreground=1.0,
              device="cpu", batch_size=128, n_train=10000, n_test=5000, frame_gap=1,
-             temporal=False, probe_splits=(2, 3), reject_reflections=False):
+             temporal=False, probe_splits=(2, 3), reject_reflections=False, affine=False):
     """Run both probes and reconstruction metrics once. No test data select weights."""
     train_split, test_split = validate_probe_splits(probe_splits)
     data_args = dict(radius=radius, noise_type=noise_type, noise_level=noise_level, frame_gap=frame_gap,
                      reject_reflections=reject_reflections,
                      noise_placement=noise_placement, background=background, foreground=foreground)
-    metrics = ImageMetrics(include_center_intensity=reject_reflections)
+    metrics = ImageMetrics(include_center_intensity=reject_reflections, include_frame_centers=affine)
     changes = TemporalReconstruction() if temporal else None
+    moments = AffineMoments() if affine else None
 
     def collect(split, size, decode):
         stream = MovieStream(np.random.SeedSequence([split, 0]), **data_args)
@@ -180,6 +210,8 @@ def evaluate(model, *, radius, noise_type="gaussian", noise_level=0.0,
                 if decode:
                     reconstruction = model.decode(z).cpu().numpy()
                     metrics.update(reconstruction, batch, radius)
+                    if moments is not None:
+                        moments.update(reconstruction, batch.clean)
                     if changes is not None:
                         changes.update(batch.clean, reconstruction)
         return np.concatenate(z_values), np.concatenate(labels)
@@ -188,6 +220,23 @@ def evaluate(model, *, radius, noise_type="gaussian", noise_level=0.0,
     z_train, y_train = collect(train_split, n_train, False)
     z_test, y_test = collect(test_split, n_test, True)
     result = {**metrics.result(), **fit_probes(z_train, y_train, z_test, y_test)}
+    if moments is not None:
+        # The single transform uses all clean test pixels, just as in collapse_replay.
+        # Evaluate real residuals in a second pass to avoid subtracting near-equal moments.
+        a, b = moments.coefficients()
+        sse = 0.
+        stream = MovieStream(np.random.SeedSequence([test_split, 0]), **data_args)
+        with torch.inference_mode():
+            for start in range(0, n_test, batch_size):
+                batch = stream.sample(min(batch_size, n_test - start), need_target=False)
+                output = model(torch.from_numpy(batch.input).to(device)).cpu().numpy()
+                error = a * output.astype(np.float64) + b - batch.clean
+                sse += np.square(error).sum()
+        corrected = -10 * math.log10(sse / moments.n) if sse else math.inf
+        if corrected + 1e-6 < result["psnr"]:
+            raise ArithmeticError("Least-squares affine fit increased pooled clean test MSE")
+        result.update(corrected_psnr=corrected, affine_a=a, affine_b=b,
+                      affine_n_pixels=moments.n, output_pixel_sd=math.sqrt(moments.sxx / moments.n))
     if changes is not None:
         result["temporal_reconstruction"] = changes.result()
     return result

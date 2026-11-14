@@ -13,7 +13,7 @@ import numpy as np
 import torch
 
 from data import MovieStream
-from evaluation import ImageMetrics
+from evaluation import AffineMoments, ImageMetrics
 from reflection_study import weights_for
 from run_sweep import (ROOT, RUNS, chosen_gap, digest, identity, main_rates, read_results,
                        runtime_info, stage_configs)
@@ -34,35 +34,6 @@ FIELDS = ("source_config_hash", "model_sha256", "comparison", "radius", "loss", 
 
 def db(mse):
     return -10 * math.log10(mse) if mse > 0 else math.inf
-
-
-class AffineMoments:
-    """Float64 pooled centered second moments; one scalar transform over both frames and all pairs."""
-    def __init__(self):
-        self.n = 0
-        self.x_mean = self.y_mean = self.sxx = self.sxy = 0.
-
-    def update(self, output, clean):
-        x, y = np.asarray(output, dtype=np.float64), np.asarray(clean, dtype=np.float64)
-        if x.shape != y.shape or not x.size:
-            raise ValueError("Require paired nonempty reconstruction and clean arrays")
-        n = x.size
-        xm, ym = x.mean(), y.mean()
-        dx, dy = xm - self.x_mean, ym - self.y_mean
-        total = self.n + n
-        between = self.n * n / total
-        xc = x - xm
-        self.sxx += float(np.square(xc).sum() + dx * dx * between)
-        self.sxy += float(np.sum(xc * (y - ym)) + dx * dy * between)
-        self.x_mean += dx * n / total
-        self.y_mean += dy * n / total
-        self.n = total
-
-    def coefficients(self):
-        if not self.n:
-            raise ValueError("No test pixels")
-        a = self.sxy / self.sxx if self.sxx > 0 else 0.
-        return a, self.y_mean - a * self.x_mean
 
 
 def design(device):

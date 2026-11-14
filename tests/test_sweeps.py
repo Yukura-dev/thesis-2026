@@ -136,9 +136,6 @@ def test_filtered_protocol_isolated_and_sanity_strict():
     assert identity(cfg, SANITY_PURPOSE, rt)["config"]["reject_reflections"] is True
     assert key != digest(identity(legacy, SANITY_PURPOSE, rt))
     assert len(main_cases(cfg, rates)) == 140
-    stage3 = stage_configs(3, cfg, rates)
-    assert len(stage3) == 330 and {c.seed for c in stage3} == {0, 1, 2}
-    assert all(c.reject_reflections for c in stage3)
     with pytest.raises(ValueError, match="has not run"):
         require_passed_sanity({}, cfg, rt)
     row = {"probe_splits": [8, 9], "passed_velocity_sanity": True, "metrics": {"velocity_r2_mlp": .8}}
@@ -159,8 +156,8 @@ def test_main_cli_defaults_filter_history_and_explicit_design_overrides(monkeypa
     monkeypatch.setattr(command, "runtime_info", lambda device, historical=False, filtered=False:
                         {"protocol": command.FILTERED_PROTOCOL if filtered else command.PROTOCOL if historical
                          else command.MAIN_PROTOCOL})
-    monkeypatch.setattr(command, "chosen_gap", lambda rows, rt, override=None: override or 2)
-    monkeypatch.setattr(command, "main_rates", lambda base, rt, rows: dict.fromkeys(LOSSES, .001))
+    monkeypatch.setattr(command, "chosen_gap", lambda rows, rt, override=None: override or 4)
+    monkeypatch.setattr(command, "main_rates", lambda base, rt, rows: dict.fromkeys(LOSSES, .003))
     monkeypatch.setattr(command, "require_passed_sanity", lambda rows, cfg, rt: gates.append((cfg, rt)))
     original = command.stage_configs
     def record(stage, base, rates, **kw):
@@ -226,3 +223,21 @@ def test_corrected_psnr_joins_only_verified_source_weights_and_counts_partial_se
     for invalid in ({"model_sha256":"wrong-weights"}, {"probe_score_stream":[3,0]}):
         with pytest.raises(ValueError, match="does not match"):
             with_reconstruction_metrics(source, {digest(diagnostic):{**obs, **invalid}})
+
+
+def test_replacement_stage3_uses_only_the_four_designs_and_reuses_past_fits():
+    from run_sweep import stage3_arms
+    rates = dict.fromkeys(LOSSES, .003)
+    base = Config(reject_reflections=True, frame_gap=4, steps=3000)
+    arms = stage3_arms(base, rates)
+    assert {k: len(v) for k, v in arms.items()} == {"A": 250, "B": 60, "C": 50, "D": 40}
+    stage3 = set(stage_configs(3, base, rates))
+    past = set(stage_configs(1, base, rates) + stage_configs(2, base, rates))
+    assert len(stage3) == 400 and len(stage3 & past) == 102 and len(stage3 - past) == 298
+    assert all(c.loss in ("l1", "l2") and c.lr == .003 and c.background == .3 for c in stage3)
+    assert {c.foreground for c in arms["C"]} == {.65} and {c.seed for c in arms["B"]} == {0, 1, 2}
+    assert {c.noise_level for c in arms["B"]} == {.2, .45}
+    assert {c.seed for c in arms["A"]} == set(range(5))
+    assert {c.placement for c in arms["D"]} == {"input_only", "both"}
+    controls = {replace(c, placement="target_only") for c in arms["D"]}
+    assert len(controls) == 20 and controls <= past
