@@ -218,6 +218,11 @@ def markdown(records, onsets):
         lines += ["", f"L1で「{label}」の初回到達をシード内で比較すると、コントラスト半減後に低いσで到達 {earlier}、"
                   f"同じσで到達 {same}、高いσで到達 {later}。半減後だけ到達 {low_only}、半減前だけ到達 {high_only}、"
                   f"両方で未到達 {neither}（全5シード）。"]
+    reversed_count = sum(r["subsequent_loss_" + name] for r in onsets for name in ("either", "both"))
+    if reversed_count == 0:
+        lines += ["", "今回の5水準では、片方・両方の各判定で、一度到達した後に高いσで基準を割るシードはなかった。"]
+    else:
+        lines += ["", f"一度到達した後に高いσで基準を割った系列は {reversed_count}/40（2損失×2コントラスト×5シード×2判定）だった。"]
     lines.extend(["", "各σでは別のAEを同一シードで初期化して学習したので、この出現点は試したσのうちでの比較。"
                   "[シード・σ別の中心輝度](results/stage3_contrast_seeds.csv) · "
                   "[各シードの初回到達と再低下](results/stage3_contrast_onsets.csv) · "
