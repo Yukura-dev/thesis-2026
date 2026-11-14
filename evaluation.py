@@ -187,12 +187,14 @@ def validate_probe_splits(splits):
 def evaluate(model, *, radius, noise_type="gaussian", noise_level=0.0,
              noise_placement="target_only", background=0.3, foreground=1.0,
              device="cpu", batch_size=128, n_train=10000, n_test=5000, frame_gap=1,
-             temporal=False, probe_splits=(2, 3), reject_reflections=False, affine=False):
+             temporal=False, probe_splits=(2, 3), reject_reflections=False, affine=False,
+             background_texture_sd=0.0):
     """Run both probes and reconstruction metrics once. No test data select weights."""
     train_split, test_split = validate_probe_splits(probe_splits)
     data_args = dict(radius=radius, noise_type=noise_type, noise_level=noise_level, frame_gap=frame_gap,
                      reject_reflections=reject_reflections,
-                     noise_placement=noise_placement, background=background, foreground=foreground)
+                     noise_placement=noise_placement, background=background, foreground=foreground,
+                     background_texture_sd=background_texture_sd)
     metrics = ImageMetrics(include_center_intensity=reject_reflections, include_frame_centers=affine)
     changes = TemporalReconstruction() if temporal else None
     moments = AffineMoments() if affine else None

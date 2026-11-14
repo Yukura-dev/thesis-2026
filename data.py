@@ -5,6 +5,42 @@ from typing import Optional
 import numpy as np
 
 SIZE = 64
+TEXTURE_METHOD = {
+    "white_noise": "NumPy Generator.standard_normal float32, independent SeedSequence child 3",
+    "blur": "separable discrete Gaussian, sigma=3 pixels, radius=12 (4 sigma)",
+    "boundary": "numpy.pad reflect (edge pixel excluded)",
+    "normalization": "subtract spatial mean; divide by population SD over all 64x64 pixels before overlay",
+    "sharing": "one new pattern per sample, shared by both frames and by input/target",
+    "composite": "background*(1-exact_disk_coverage)+foreground*exact_disk_coverage",
+    "clipping": "none",
+}
+
+
+def smooth_backgrounds(rng, n, background, standard_deviation):
+    """Per-pair texture, normalized before drawing the foreground; no clipping.
+
+    Gaussian convolution uses a fixed 25-tap kernel in each spatial direction.
+    Normalizing each sample separately defines SD exactly over its full canvas,
+    rather than merely setting an expected SD across random draws.
+    """
+    white = rng.standard_normal((n, SIZE, SIZE), dtype=np.float32)
+    offsets = np.arange(-12, 13, dtype=np.float64)
+    kernel = np.exp(-.5 * np.square(offsets / 3))
+    kernel = (kernel / kernel.sum()).astype(np.float32)
+    smooth = white
+    for axis in (1, 2):
+        padding = [(0, 0)] * 3
+        padding[axis] = (12, 12)
+        padded = np.pad(smooth, padding, mode="reflect")
+        smooth = np.zeros_like(white)
+        for index, weight in enumerate(kernel):
+            slices = [slice(None)] * 3
+            slices[axis] = slice(index, index + SIZE)
+            smooth += weight * padded[tuple(slices)]
+    centered = smooth.astype(np.float64)
+    centered -= centered.mean(axis=(1, 2), keepdims=True)
+    sd = np.sqrt(np.square(centered).mean(axis=(1, 2), keepdims=True))
+    return (background + standard_deviation * centered / sd).astype(np.float32)
 
 
 def validate_frame_gap(frame_gap):
@@ -99,7 +135,7 @@ class Batch:
 class MovieStream:
     def __init__(self, seed, *, radius, noise_type="gaussian", noise_level=0.0,
                  noise_placement="target_only", background=0.3, foreground=1.0, frame_gap=1,
-                 reject_reflections=False):
+                 reject_reflections=False, background_texture_sd=0.0):
         validate_frame_gap(frame_gap)
         if not isinstance(reject_reflections, bool):
             raise ValueError("reject_reflections must be boolean")
@@ -110,6 +146,9 @@ class MovieStream:
             raise ValueError("radius must be one of 1, 2, 3, 5, 8")
         if not (0 <= background <= 1 and 0 <= foreground <= 1):
             raise ValueError("foreground and background must be intensities in [0,1]")
+        if not np.isfinite(background_texture_sd) or background_texture_sd < 0:
+            raise ValueError("background_texture_sd must be finite and nonnegative")
+        self.background_texture_sd = background_texture_sd
         if noise_type not in ("gaussian", "salt_pepper"):
             raise ValueError("unsupported noise type")
         if not np.isfinite(noise_level) or noise_level < 0 or (noise_type == "salt_pepper" and noise_level > 1):
@@ -122,6 +161,8 @@ class MovieStream:
         seq = seed if isinstance(seed, np.random.SeedSequence) else np.random.SeedSequence(seed)
         base = np.random.SeedSequence(seq.entropy, spawn_key=seq.spawn_key, pool_size=seq.pool_size)
         self.motion, self.input_rng, self.target_rng = map(np.random.default_rng, base.spawn(3))
+        # The original three child streams and all SD=0 arithmetic remain unchanged.
+        self.texture_rng = np.random.default_rng(base.spawn(1)[0])
 
     def _propose(self, n):
         # Draw the four independent uniforms together so motion is invariant to chunk size.
@@ -162,7 +203,13 @@ class MovieStream:
 
     def sample(self, n, *, need_target=True):
         centers, labels = self.geometry(n)
-        clean = disk_images(centers, self.radius, self.background, self.foreground)
+        if self.background_texture_sd:
+            background = smooth_backgrounds(self.texture_rng, n, self.background,
+                                            self.background_texture_sd)[:, None]
+            coverage = disk_images(centers, self.radius, 0, 1)
+            clean = background * (1 - coverage) + self.foreground * coverage
+        else:
+            clean = disk_images(centers, self.radius, self.background, self.foreground)
         inputs = (noise(clean, self.input_rng, self.kind, self.level)
                   if self.placement in ("input_only", "both") else clean)
         target = None

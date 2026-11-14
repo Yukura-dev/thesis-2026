@@ -27,6 +27,8 @@ def experiment_spec(config, runtime):
     # Steps/loss/rate describe training elsewhere. No optimizer or reconstruction
     # objective is constructed in this experiment. Keep the actual update count in its hash.
     record = asdict(config)
+    if record.get("background_texture_sd") == 0:
+        del record["background_texture_sd"]
     del record["loss"], record["lr"]
     record["steps"] = 0
     return {"config": record, "runtime": runtime, "purpose": PURPOSE}

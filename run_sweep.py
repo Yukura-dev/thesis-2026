@@ -105,6 +105,8 @@ def config_record(config):
     record = asdict(config)
     if record.get("reject_reflections") is False:
         del record["reject_reflections"]
+    if record.get("background_texture_sd") == 0:
+        del record["background_texture_sd"]
     return record
 
 

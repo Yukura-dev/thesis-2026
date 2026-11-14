@@ -35,6 +35,7 @@ class Config:
     probe_test: int = 5000
     frame_gap: int = 1
     reject_reflections: bool = False
+    background_texture_sd: float = 0.0
 
     def __post_init__(self):
         validate_frame_gap(self.frame_gap)
@@ -60,11 +61,16 @@ class Config:
             raise ValueError("Clean image intensities must be in [0, 1]")
         if self.foreground == self.background:
             raise ValueError("Equal foreground and background make the object invisible")
+        if not np.isfinite(self.background_texture_sd) or self.background_texture_sd < 0:
+            raise ValueError("background_texture_sd must be finite and nonnegative")
 
     def movie_kwargs(self):
-        return dict(radius=self.radius, noise_type=self.noise_type, noise_level=self.noise_level,
-                    noise_placement=self.placement, background=self.background, foreground=self.foreground,
-                    frame_gap=self.frame_gap, reject_reflections=self.reject_reflections)
+        options = dict(radius=self.radius, noise_type=self.noise_type, noise_level=self.noise_level,
+                       noise_placement=self.placement, background=self.background, foreground=self.foreground,
+                       frame_gap=self.frame_gap, reject_reflections=self.reject_reflections)
+        if self.background_texture_sd:
+            options["background_texture_sd"] = self.background_texture_sd
+        return options
 
 
 class Autoencoder(nn.Module):
