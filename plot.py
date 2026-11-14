@@ -206,7 +206,7 @@ def main():
     parser.add_argument("--runtime", help="runtime ID if result rows contain multiple environments")
     parser.add_argument("--historical", action="store_true", help="plot only the original 300-step stage 0")
     parser.add_argument("--stage", type=int, choices=(1, 2, 3),
-                        help="limit the plotted design to this stage (stage 3: seeds 0, 1 and 2 only)")
+                        help="limit the plotted design to this stage (filtered stage 3: arm-specific seed sets)")
     parser.add_argument("--shared-lr", action="store_true", help="plot stage 1 shared-LR sensitivity")
     parser.add_argument("--out", type=Path, help="output directory")
     args = parser.parse_args()
@@ -273,6 +273,10 @@ def main():
             out /= "shared_lr" if args.shared_lr else "main"
             if args.stage is not None:
                 out /= f"stage_{args.stage}"
+    if args.stage == 3 and runtime["protocol"] == FILTERED_PROTOCOL:
+        from stage3_summary import write_outputs
+        write_outputs(rows, runtime, base, rates, out)
+        return
     observations = {}
     if runtime["protocol"] == FILTERED_PROTOCOL:
         from collapse_replay import LEDGER
