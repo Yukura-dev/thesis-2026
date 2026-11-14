@@ -6,7 +6,7 @@ import json
 import math
 from pathlib import Path
 
-from final_summary import BASE, load_ledger, statistics
+from final_summary import BASE, digest, load_ledger, statistics
 from plot import with_reconstruction_metrics
 from run_sweep import FILTERED_PROTOCOL, ROOT, RUNS
 
@@ -129,19 +129,29 @@ def collect(rows, frame_rows, reconstruction_rows, trajectory_rows, failures, *,
                                metrics={m: statistics([r[m] for r in group], seeds, probe=m in PROBES) for m in METRICS}))
     trajectories = []
     seen = set()
+    planned = set(product((5, 8), (0., .4), ("l1", "l2"), range(5), ("a", "b")))
     for row in trajectory_rows.values():
         if row["purpose"] != TRAJECTORY_PURPOSE:
             raise ValueError("Unknown trajectory measurement")
         key = key_of(row)
         step = row["step"]
-        if key[-1] not in ("a", "b") or step not in STEPS or (*key, step) in seen:
+        if key not in planned or step not in STEPS or (*key, step) in seen:
             raise ValueError("Unexpected or repeated trajectory point")
         if row["config"] != expected_config(*key[:4]):
             raise ValueError("Trajectory changed a controlled setting")
+        rt = row["runtime"]
+        endpoint_runtime = {k: v for k, v in rt.items() if k not in ("checkpoint_step", "endpoint_config_hash")}
+        endpoint_hash = digest(dict(config=row["config"], purpose=PURPOSE, runtime=endpoint_runtime))
+        if (rt.get("protocol") != PROTOCOL or rt.get("checkpoint_step") != step or
+                rt.get("endpoint_config_hash") != endpoint_hash or row.get("endpoint_config_hash") != endpoint_hash or
+                row.get("evaluation_seed_sequence") != [7, 0] or row.get("evaluation_n") != 5000):
+            raise ValueError("Trajectory protocol, endpoint identity or evaluation split differs")
         seen.add((*key, step))
         if any(not math.isfinite(row["metrics"][k]) for k in TRAJECTORY_METRICS):
             raise ValueError("Non-finite trajectory point")
         final = source.get(key)
+        if final and final["config_hash"] != endpoint_hash:
+            raise ValueError("Trajectory refers to a different endpoint")
         if final and step == 3000:
             if row["model_sha256"] != final["model_sha256"]:
                 raise ValueError("Trajectory and endpoint weights disagree")
@@ -159,7 +169,7 @@ def collect(rows, frame_rows, reconstruction_rows, trajectory_rows, failures, *,
         trajectory_conditions.append(dict(radius=radius, noise_level=level, loss=loss, initialization=variant, step=step,
                                           observed_seeds=seeds,
                                           metrics={m: statistics([r[m] for r in group], seeds) for m in TRAJECTORY_METRICS}))
-    complete = len(observed) == 120 and len(trajectories) == 320
+    complete = len(observed) == 120 and seen == {(*key, step) for key in planned for step in STEPS}
     if not complete and not allow_partial:
         raise ValueError(f"K is incomplete: {len(observed)}/120 endpoints, {len(trajectories)}/320 trajectory points; use --allow-partial to report failures or missing items explicitly")
     return dict(complete=complete, expected_new_fits=80, expected_controls=40, expected_trajectory_points=320,
@@ -209,6 +219,16 @@ def csv_write(path, rows):
             w.writerow({k: json.dumps(v, ensure_ascii=False, separators=(",", ":")) if isinstance(v, (list, dict)) else v for k, v in r.items()})
 
 
+def flat_conditions(conditions):
+    for c in conditions:
+        row = {k: v for k, v in c.items() if k not in ("metrics", "counts")}
+        row.update({"count_" + k: v for k, v in c.get("counts", {}).items()})
+        for metric, stats in c["metrics"].items():
+            if stats is not None:
+                row.update({f"{metric}_{stat}": value for stat, value in stats.items()})
+        yield row
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=OUT)
@@ -220,8 +240,8 @@ def main():
                       load_ledger(ROOT / "results/initialization_failures.jsonl"), allow_partial=args.allow_partial)
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False, allow_nan=False) + "\n")
-    for filename, rows in (("seeds.csv", summary["seeds"]), ("conditions.csv", summary["conditions"]),
-                           ("trajectory_seeds.csv", summary["trajectories"]), ("trajectory_conditions.csv", summary["trajectory_conditions"])):
+    for filename, rows in (("seeds.csv", summary["seeds"]), ("conditions.csv", list(flat_conditions(summary["conditions"]))),
+                           ("trajectory_seeds.csv", summary["trajectories"]), ("trajectory_conditions.csv", list(flat_conditions(summary["trajectory_conditions"])))):
         csv_write(args.out / filename, rows)
     (args.out / "tables.md").write_text(markdown(summary, prefix=""))
     print(f"K: {len(summary['seeds'])}/120 endpoints incl.40 controls; {len(summary['trajectories'])}/320 trajectory points")
