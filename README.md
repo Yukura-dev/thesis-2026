@@ -21,6 +21,7 @@ python -m pip check
 python run_sweep.py --stage 3 --dry-run  # 全件数と残数を確認
 python run_sweep.py --stage 3            # 中断後も同じコマンドで再開
 python plot.py --stage 3                 # 保存済みの結果からシード表・集計表・3種類の地図を作成
+python stage3_contrast.py                # Cのフレーム別の中心輝度と、初めて中点に達したσを出力
 ```
 
 Δ=4、3,000ステップ、Adamの学習率0.003、潜在16次元、背景0.3を共通にします。観測する2枚の間に壁反射がある軌道は棄却します。各行でL1とL2を同じシードで比較します。
