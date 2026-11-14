@@ -76,9 +76,12 @@ class Config:
 class Autoencoder(nn.Module):
     """4x stride-2 convolution to a 4x4 grid, dense bottleneck, mirrored decoder."""
 
-    def __init__(self, latent_dim: int, background: float):
+    def __init__(self, latent_dim: int, background: float, *, initialization: str = "default"):
         super().__init__()
+        if initialization not in ("default", "a", "b"):
+            raise ValueError(f"Unknown initialization: {initialization}")
         self.background = background
+        self.initialization = initialization
         widths = (2, 8, 16, 24, 32)
         enc = []
         for a, b in zip(widths, widths[1:]):
@@ -93,17 +96,22 @@ class Autoencoder(nn.Module):
             if b != 2:
                 dec.extend([nn.GroupNorm(1, b), nn.LeakyReLU(0.1)])
         self.decoder = nn.Sequential(*dec)
-        # Start every loss near the same background, with an open gradient path to z.
+        # Variant a removes only the weight multiplier; b leaves PyTorch defaults.
+        # These post-initialization operations consume no additional random draws.
         with torch.no_grad():
-            self.decoder[-1].weight.mul_(0.1)
-            self.decoder[-1].bias.zero_()
+            if initialization == "default":
+                self.decoder[-1].weight.mul_(0.1)
+            if initialization != "b":
+                self.decoder[-1].bias.zero_()
 
     def encode(self, x):
-        return self.to_latent(self.encoder(x - self.background).flatten(1))
+        centered = x if self.initialization == "b" else x - self.background
+        return self.to_latent(self.encoder(centered).flatten(1))
 
     def decode(self, z):
         grid = self.from_latent(z).reshape(-1, 32, 4, 4)
-        return self.background + self.decoder(grid)
+        output = self.decoder(grid)
+        return output if self.initialization == "b" else self.background + output
 
     def forward(self, x):
         return self.decode(self.encode(x))

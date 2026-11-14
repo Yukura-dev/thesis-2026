@@ -1,0 +1,25 @@
+{
+  "initial": {
+    "0": "27c2ee7bf3d878ac04582904e89a31690443c461aa5f7afcc1b823881d029233",
+    "1": "9cfca29deeb54bc461a8b88cdf44faff9d461e8facc984c299066668e0c5d2e3",
+    "2": "f15e4c7d0f9bc12fe22417a5b0d5cd22ab58c041d24b8a8f2fcd9d664f144523",
+    "3": "216d7249c342d97a8a8e047e4fec96f3f95f5e5fb13f2f740d56301a4b008c61",
+    "4": "39df29ab55b897ab9f098806d6e40dc188913e9a04a3c2fcfe3e28885e6ec685"
+  },
+  "numpy": "2.3.5",
+  "short_training": {
+    "l1": {
+      "last_train_loss": 0.3247257471084595,
+      "latent_sha256": "d8e215cceea30493ea29358dc93d75445b5a9c82b8aeda8a0d6fc32f92a393f9",
+      "model_sha256": "78359fa3616c215e8756984b527ea402740730b51e6702158e7ec09237f5890f",
+      "output_sha256": "4a736616ee19c905c9921c0ad839cbbd37d4e2e3975510cef0ee5b919c9f5d53"
+    },
+    "l2": {
+      "last_train_loss": 0.16768640279769897,
+      "latent_sha256": "17a4178a861e852bf422b03eed507144e16ce8ee7dc4c1d46395b5a721038d38",
+      "model_sha256": "e000648a6ec52cc21b48629ab72125e30247e7cbcdcd6504a4b18d93998472f4",
+      "output_sha256": "5989ad5e81ae72684feb0cf4a5343827dbe97f2198d1394b685e35a92a0f43e5"
+    }
+  },
+  "torch": "2.12.1"
+}
