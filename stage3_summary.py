@@ -225,9 +225,11 @@ def report_tables(summary):
         parts += ["", f"### {arm}　{title}", "",
                   "| r | 物体輝度 | ノイズ | 量 | ノイズの場所 | 損失 | 通常PSNR | 補正PSNR | 中心輝度 | 位置R² | 速度R² | 未来位置R² |",
                   "|---:|---:|---|---:|---|---|---:|---:|---:|---|---|---|"]
-        for cell in summary["conditions"]:
-            if cell["arm"] != arm:
-                continue
+        cells = [cell for cell in summary["conditions"] if cell["arm"] == arm]
+        if arm == "D":
+            placements = {"target_only": 0, "input_only": 1, "both": 2}
+            cells.sort(key=lambda c: (c["noise_type"], c["loss"], placements[c["placement"]]))
+        for cell in cells:
             cols = [str(cell["radius"]), f"{cell['foreground']:g}", cell["noise_type"], f"{cell['noise_level']:g}",
                     cell["placement"], cell["loss"].upper()]
             for key, decimals in zip(IMAGE, (2,2,4), strict=True):
