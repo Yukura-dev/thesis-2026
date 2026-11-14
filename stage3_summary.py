@@ -223,7 +223,7 @@ def report_tables(summary):
              "補正PSNRは各モデルについて評価5,000組の全画素で1組の係数を求めた値。"]
     for arm, title in sections.items():
         parts += ["", f"### {arm}　{title}", "",
-                  "| r | 輝度 | ノイズ | 量 | 位置 | 損失 | 通常PSNR | 補正PSNR | 中心輝度 | 位置R² | 速度R² | 未来位置R² |",
+                  "| r | 物体輝度 | ノイズ | 量 | ノイズの場所 | 損失 | 通常PSNR | 補正PSNR | 中心輝度 | 位置R² | 速度R² | 未来位置R² |",
                   "|---:|---:|---|---:|---|---|---:|---:|---:|---|---|---|"]
         for cell in summary["conditions"]:
             if cell["arm"] != arm:
