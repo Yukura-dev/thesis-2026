@@ -29,7 +29,7 @@ def experiment_spec(config, runtime):
     record = asdict(config)
     if record.get("background_texture_sd") == 0:
         del record["background_texture_sd"]
-    del record["loss"], record["lr"]
+    del record["loss"], record["lr"], record["loss_scale"]
     record["steps"] = 0
     return {"config": record, "runtime": runtime, "purpose": PURPOSE}
 

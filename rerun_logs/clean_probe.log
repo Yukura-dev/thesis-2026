@@ -1,0 +1,51 @@
+models 40
+both salt_pepper 0.2 l1 seed=0 vel noisy=-0.052 clean=0.507
+both salt_pepper 0.2 l1 seed=1 vel noisy=0.026 clean=0.105
+both salt_pepper 0.2 l1 seed=2 vel noisy=0.055 clean=0.282
+both salt_pepper 0.2 l1 seed=3 vel noisy=-0.010 clean=0.189
+both salt_pepper 0.2 l1 seed=4 vel noisy=-0.012 clean=0.012
+input_only salt_pepper 0.2 l1 seed=0 vel noisy=-0.032 clean=0.432
+input_only salt_pepper 0.2 l1 seed=1 vel noisy=0.026 clean=0.145
+input_only salt_pepper 0.2 l1 seed=2 vel noisy=0.083 clean=0.320
+input_only salt_pepper 0.2 l1 seed=3 vel noisy=-0.014 clean=0.125
+input_only salt_pepper 0.2 l1 seed=4 vel noisy=-0.017 clean=0.042
+both gaussian 0.4 l1 seed=0 vel noisy=0.950 clean=0.958
+both gaussian 0.4 l1 seed=1 vel noisy=0.940 clean=0.948
+both gaussian 0.4 l1 seed=2 vel noisy=0.945 clean=0.954
+both gaussian 0.4 l1 seed=3 vel noisy=0.915 clean=0.939
+both gaussian 0.4 l1 seed=4 vel noisy=0.951 clean=0.961
+input_only gaussian 0.4 l1 seed=0 vel noisy=-0.039 clean=0.572
+input_only gaussian 0.4 l1 seed=1 vel noisy=0.002 clean=0.197
+input_only gaussian 0.4 l1 seed=2 vel noisy=0.027 clean=0.274
+input_only gaussian 0.4 l1 seed=3 vel noisy=-0.022 clean=0.237
+input_only gaussian 0.4 l1 seed=4 vel noisy=-0.023 clean=0.053
+both salt_pepper 0.2 l2 seed=0 vel noisy=0.975 clean=0.980
+both salt_pepper 0.2 l2 seed=1 vel noisy=0.965 clean=0.970
+both salt_pepper 0.2 l2 seed=2 vel noisy=0.964 clean=0.970
+both salt_pepper 0.2 l2 seed=3 vel noisy=0.948 clean=0.952
+both salt_pepper 0.2 l2 seed=4 vel noisy=0.956 clean=0.964
+input_only salt_pepper 0.2 l2 seed=0 vel noisy=0.976 clean=0.983
+input_only salt_pepper 0.2 l2 seed=1 vel noisy=0.967 clean=0.973
+input_only salt_pepper 0.2 l2 seed=2 vel noisy=0.958 clean=0.962
+input_only salt_pepper 0.2 l2 seed=3 vel noisy=0.957 clean=0.965
+input_only salt_pepper 0.2 l2 seed=4 vel noisy=0.960 clean=0.965
+both gaussian 0.4 l2 seed=0 vel noisy=0.961 clean=0.969
+both gaussian 0.4 l2 seed=1 vel noisy=0.964 clean=0.972
+both gaussian 0.4 l2 seed=2 vel noisy=0.956 clean=0.966
+both gaussian 0.4 l2 seed=3 vel noisy=0.950 clean=0.958
+both gaussian 0.4 l2 seed=4 vel noisy=0.950 clean=0.958
+input_only gaussian 0.4 l2 seed=0 vel noisy=0.969 clean=0.976
+input_only gaussian 0.4 l2 seed=1 vel noisy=0.958 clean=0.966
+input_only gaussian 0.4 l2 seed=2 vel noisy=0.961 clean=0.971
+input_only gaussian 0.4 l2 seed=3 vel noisy=0.960 clean=0.970
+input_only gaussian 0.4 l2 seed=4 vel noisy=0.960 clean=0.967
+| 場所 | ノイズ | 損失 | n | 位置R² ノイズ入力 → クリーン | 速度R² ノイズ入力 → クリーン | 成功数 ノイズ入力 → クリーン |
+|---|---|---|---:|---|---|---|
+| both | gaussian 0.4 | l1 | 5 | 0.977 → 0.980 | 0.940 → 0.952 | 5/5 → 5/5 |
+| both | gaussian 0.4 | l2 | 5 | 0.984 → 0.986 | 0.956 → 0.965 | 5/5 → 5/5 |
+| both | salt_pepper 0.2 | l1 | 5 | 0.696 → 0.956 | 0.001 → 0.219 | 0/5 → 0/5 |
+| both | salt_pepper 0.2 | l2 | 5 | 0.989 → 0.990 | 0.962 → 0.967 | 5/5 → 5/5 |
+| input_only | gaussian 0.4 | l1 | 5 | 0.354 → 0.961 | -0.011 → 0.266 | 0/5 → 0/5 |
+| input_only | gaussian 0.4 | l2 | 5 | 0.987 → 0.988 | 0.962 → 0.970 | 5/5 → 5/5 |
+| input_only | salt_pepper 0.2 | l1 | 5 | 0.687 → 0.953 | 0.009 → 0.213 | 0/5 → 0/5 |
+| input_only | salt_pepper 0.2 | l2 | 5 | 0.989 → 0.990 | 0.964 → 0.970 | 5/5 → 5/5 |

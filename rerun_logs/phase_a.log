@@ -1,0 +1,511 @@
+=== 2026-11-18 12:02:40 START diagnose_steps.py
+seed 0 training 0 -> 300
+seed 0 step 300 cumulative train 3.9s
+measured seed 0, 300 steps: velocity MLP R²=-0.00718
+seed 1 training 0 -> 300
+seed 1 step 300 cumulative train 2.4s
+measured seed 1, 300 steps: velocity MLP R²=-0.00565
+seed 2 training 0 -> 300
+seed 2 step 300 cumulative train 2.4s
+measured seed 2, 300 steps: velocity MLP R²=-0.00520
+seed 0 training 300 -> 1000
+seed 0 step 500 cumulative train 5.5s
+seed 0 step 1000 cumulative train 9.6s
+measured seed 0, 1000 steps: velocity MLP R²=-0.00810
+seed 1 training 300 -> 1000
+seed 1 step 500 cumulative train 4.1s
+seed 1 step 1000 cumulative train 8.0s
+measured seed 1, 1000 steps: velocity MLP R²=-0.00614
+seed 2 training 300 -> 1000
+seed 2 step 500 cumulative train 4.0s
+seed 2 step 1000 cumulative train 8.0s
+measured seed 2, 1000 steps: velocity MLP R²=-0.00822
+seed 0 training 1000 -> 3000
+seed 0 step 1500 cumulative train 13.7s
+seed 0 step 2000 cumulative train 17.7s
+seed 0 step 2500 cumulative train 21.7s
+seed 0 step 3000 cumulative train 25.8s
+measured seed 0, 3000 steps: velocity MLP R²=0.16122
+seed 1 training 1000 -> 3000
+seed 1 step 1500 cumulative train 12.1s
+seed 1 step 2000 cumulative train 16.1s
+seed 1 step 2500 cumulative train 20.4s
+seed 1 step 3000 cumulative train 24.5s
+measured seed 1, 3000 steps: velocity MLP R²=0.01655
+seed 2 training 1000 -> 3000
+seed 2 step 1500 cumulative train 12.2s
+seed 2 step 2000 cumulative train 16.2s
+seed 2 step 2500 cumulative train 20.2s
+seed 2 step 3000 cumulative train 24.2s
+measured seed 2, 3000 steps: velocity MLP R²=-0.01812
+seed 0 training 3000 -> 10000
+seed 0 step 3500 cumulative train 29.8s
+seed 0 step 4000 cumulative train 33.9s
+seed 0 step 4500 cumulative train 37.9s
+seed 0 step 5000 cumulative train 42.1s
+seed 0 step 5500 cumulative train 46.2s
+seed 0 step 6000 cumulative train 50.4s
+seed 0 step 6500 cumulative train 54.4s
+seed 0 step 7000 cumulative train 58.5s
+seed 0 step 7500 cumulative train 62.6s
+seed 0 step 8000 cumulative train 66.6s
+seed 0 step 8500 cumulative train 70.8s
+seed 0 step 9000 cumulative train 74.8s
+seed 0 step 9500 cumulative train 78.8s
+seed 0 step 10000 cumulative train 82.8s
+measured seed 0, 10000 steps: velocity MLP R²=0.93701
+seed 1 training 3000 -> 10000
+seed 1 step 3500 cumulative train 28.5s
+seed 1 step 4000 cumulative train 32.6s
+seed 1 step 4500 cumulative train 36.6s
+seed 1 step 5000 cumulative train 40.6s
+seed 1 step 5500 cumulative train 44.6s
+seed 1 step 6000 cumulative train 48.7s
+seed 1 step 6500 cumulative train 52.7s
+seed 1 step 7000 cumulative train 56.8s
+seed 1 step 7500 cumulative train 60.8s
+seed 1 step 8000 cumulative train 64.8s
+seed 1 step 8500 cumulative train 68.8s
+seed 1 step 9000 cumulative train 72.8s
+seed 1 step 9500 cumulative train 76.8s
+seed 1 step 10000 cumulative train 80.9s
+measured seed 1, 10000 steps: velocity MLP R²=0.93942
+seed 2 training 3000 -> 10000
+seed 2 step 3500 cumulative train 28.3s
+seed 2 step 4000 cumulative train 32.4s
+seed 2 step 4500 cumulative train 36.5s
+seed 2 step 5000 cumulative train 40.5s
+seed 2 step 5500 cumulative train 44.5s
+seed 2 step 6000 cumulative train 48.7s
+seed 2 step 6500 cumulative train 52.7s
+seed 2 step 7000 cumulative train 56.7s
+seed 2 step 7500 cumulative train 60.7s
+seed 2 step 8000 cumulative train 64.7s
+seed 2 step 8500 cumulative train 68.7s
+seed 2 step 9000 cumulative train 72.8s
+seed 2 step 9500 cumulative train 76.8s
+seed 2 step 10000 cumulative train 80.7s
+measured seed 2, 10000 steps: velocity MLP R²=-0.01808
+=== 2026-11-18 12:07:28 DONE diagnose_steps.py
+=== 2026-11-18 12:07:28 START gap_study.py --selection
+gap_selection: 60 configurations, 60 outstanding
+gap_selection gap=1 r=2 seed=0 l2 lr=0.003
+saved 83c6cd6aa6 velocity R²=-0.01739
+gap_selection gap=1 r=2 seed=1 l2 lr=0.003
+saved 3cd8318640 velocity R²=-0.02462
+gap_selection gap=1 r=2 seed=2 l2 lr=0.003
+saved cdec5a684b velocity R²=0.93950
+gap_selection gap=1 r=2 seed=3 l2 lr=0.003
+saved 7f1b17945e velocity R²=-0.02478
+gap_selection gap=1 r=2 seed=4 l2 lr=0.003
+saved cfd29962b7 velocity R²=-0.01452
+gap_selection gap=1 r=5 seed=0 l2 lr=0.003
+saved 2a9e19fbb6 velocity R²=0.16122 (reused)
+gap_selection gap=1 r=5 seed=1 l2 lr=0.003
+saved 149ed5c4f5 velocity R²=0.01655 (reused)
+gap_selection gap=1 r=5 seed=2 l2 lr=0.003
+saved 2e63cf1fd9 velocity R²=-0.01812 (reused)
+gap_selection gap=1 r=5 seed=3 l2 lr=0.003
+saved ccdb5cb577 velocity R²=-0.01646
+gap_selection gap=1 r=5 seed=4 l2 lr=0.003
+saved 5e3095e8ae velocity R²=-0.01969
+gap_selection gap=1 r=8 seed=0 l2 lr=0.003
+saved ac0b8bc3a8 velocity R²=-0.01046
+gap_selection gap=1 r=8 seed=1 l2 lr=0.003
+saved a158a16774 velocity R²=-0.00875
+gap_selection gap=1 r=8 seed=2 l2 lr=0.003
+saved af0f12884c velocity R²=-0.00902
+gap_selection gap=1 r=8 seed=3 l2 lr=0.003
+saved 5041157c2d velocity R²=-0.01106
+gap_selection gap=1 r=8 seed=4 l2 lr=0.003
+saved 7fe356d3b8 velocity R²=-0.00995
+gap_selection gap=2 r=2 seed=0 l2 lr=0.003
+saved 83478eb733 velocity R²=0.05296
+gap_selection gap=2 r=2 seed=1 l2 lr=0.003
+saved 5185df0a33 velocity R²=0.05459
+gap_selection gap=2 r=2 seed=2 l2 lr=0.003
+saved ee75363d1d velocity R²=0.76622
+gap_selection gap=2 r=2 seed=3 l2 lr=0.003
+saved db95b0f652 velocity R²=0.48192
+gap_selection gap=2 r=2 seed=4 l2 lr=0.003
+saved 67e3a82c90 velocity R²=-0.02168
+gap_selection gap=2 r=5 seed=0 l2 lr=0.003
+saved d5b0e00d3f velocity R²=-0.00556
+gap_selection gap=2 r=5 seed=1 l2 lr=0.003
+saved 6d2f13c421 velocity R²=-0.00624
+gap_selection gap=2 r=5 seed=2 l2 lr=0.003
+saved 18d7c858e4 velocity R²=-0.00959
+gap_selection gap=2 r=5 seed=3 l2 lr=0.003
+saved cc2ba6f29c velocity R²=-0.00601
+gap_selection gap=2 r=5 seed=4 l2 lr=0.003
+saved fb11e20462 velocity R²=0.88812
+gap_selection gap=2 r=8 seed=0 l2 lr=0.003
+saved 900fab05d3 velocity R²=0.89848
+gap_selection gap=2 r=8 seed=1 l2 lr=0.003
+saved 7812c4fa4f velocity R²=-0.00283
+gap_selection gap=2 r=8 seed=2 l2 lr=0.003
+saved e34b925ea3 velocity R²=0.89760
+gap_selection gap=2 r=8 seed=3 l2 lr=0.003
+saved a2d61f51d3 velocity R²=0.00113
+gap_selection gap=2 r=8 seed=4 l2 lr=0.003
+saved 1483fd8fbb velocity R²=0.89466
+gap_selection gap=4 r=2 seed=0 l2 lr=0.003
+saved b307b7981a velocity R²=-0.02006
+gap_selection gap=4 r=2 seed=1 l2 lr=0.003
+saved b1009e8a19 velocity R²=0.14909
+gap_selection gap=4 r=2 seed=2 l2 lr=0.003
+saved e2c140c7b9 velocity R²=0.14770
+gap_selection gap=4 r=2 seed=3 l2 lr=0.003
+saved 085f06d931 velocity R²=-0.02176
+gap_selection gap=4 r=2 seed=4 l2 lr=0.003
+saved 82b9f6e216 velocity R²=-0.02157
+gap_selection gap=4 r=5 seed=0 l2 lr=0.003
+saved e981dc5159 velocity R²=0.78868
+gap_selection gap=4 r=5 seed=1 l2 lr=0.003
+saved a0606b2f04 velocity R²=0.82641
+gap_selection gap=4 r=5 seed=2 l2 lr=0.003
+saved 6e97c3437a velocity R²=0.79558
+gap_selection gap=4 r=5 seed=3 l2 lr=0.003
+saved 97dbbec97a velocity R²=0.83125
+gap_selection gap=4 r=5 seed=4 l2 lr=0.003
+saved 8d4b34ceed velocity R²=0.82288
+gap_selection gap=4 r=8 seed=0 l2 lr=0.003
+saved 1c5abb7d6f velocity R²=0.83400
+gap_selection gap=4 r=8 seed=1 l2 lr=0.003
+saved 1ec4f3709f velocity R²=0.83856
+gap_selection gap=4 r=8 seed=2 l2 lr=0.003
+saved 00ddeb3439 velocity R²=0.83395
+gap_selection gap=4 r=8 seed=3 l2 lr=0.003
+saved 9ddccd6a7a velocity R²=0.83168
+gap_selection gap=4 r=8 seed=4 l2 lr=0.003
+saved 170849b77e velocity R²=0.83080
+gap_selection gap=8 r=2 seed=0 l2 lr=0.003
+saved e0f776dc27 velocity R²=-0.02034
+gap_selection gap=8 r=2 seed=1 l2 lr=0.003
+saved 3b2a1c11be velocity R²=0.30667
+gap_selection gap=8 r=2 seed=2 l2 lr=0.003
+saved 8324a96c6d velocity R²=0.30594
+gap_selection gap=8 r=2 seed=3 l2 lr=0.003
+saved 29f1d3da3d velocity R²=-0.02240
+gap_selection gap=8 r=2 seed=4 l2 lr=0.003
+saved 7b27b94863 velocity R²=-0.02465
+gap_selection gap=8 r=5 seed=0 l2 lr=0.003
+saved 602581ab86 velocity R²=0.63279
+gap_selection gap=8 r=5 seed=1 l2 lr=0.003
+saved 15e18ce427 velocity R²=0.64297
+gap_selection gap=8 r=5 seed=2 l2 lr=0.003
+saved a6b56ee02d velocity R²=0.65405
+gap_selection gap=8 r=5 seed=3 l2 lr=0.003
+saved 6926e25bf5 velocity R²=0.61564
+gap_selection gap=8 r=5 seed=4 l2 lr=0.003
+saved 5c9b3ee70b velocity R²=0.71058
+gap_selection gap=8 r=8 seed=0 l2 lr=0.003
+saved a0da7bfe3b velocity R²=0.69785
+gap_selection gap=8 r=8 seed=1 l2 lr=0.003
+saved 28b6acd917 velocity R²=0.69575
+gap_selection gap=8 r=8 seed=2 l2 lr=0.003
+saved 468c3d5775 velocity R²=0.69669
+gap_selection gap=8 r=8 seed=3 l2 lr=0.003
+saved 2d6107136f velocity R²=0.69380
+gap_selection gap=8 r=8 seed=4 l2 lr=0.003
+saved 25ebaf9bff velocity R²=0.69528
+selected gap: None
+elapsed 1526.6 s
+=== 2026-11-18 12:32:56 DONE gap_study.py --selection
+=== 2026-11-18 12:32:56 START reflection_metrics.py
+gap=1 r=2, true-center MLP=0.952670, test Bayes=0.974618, population Bayes=0.975000
+gap=1 r=5, true-center MLP=0.951203, test Bayes=0.971943, population Bayes=0.972222
+gap=1 r=8, true-center MLP=0.950565, test Bayes=0.967150, population Bayes=0.968750
+gap=2 r=2, true-center MLP=0.923505, test Bayes=0.950303, population Bayes=0.950000
+gap=2 r=5, true-center MLP=0.917226, test Bayes=0.945621, population Bayes=0.944444
+gap=2 r=8, true-center MLP=0.910774, test Bayes=0.938732, population Bayes=0.937500
+gap=4 r=2, true-center MLP=0.859376, test Bayes=0.902642, population Bayes=0.900000
+gap=4 r=5, true-center MLP=0.848133, test Bayes=0.891749, population Bayes=0.888889
+gap=4 r=8, true-center MLP=0.837605, test Bayes=0.876201, population Bayes=0.875000
+gap=8 r=2, true-center MLP=0.770178, test Bayes=0.802165, population Bayes=0.800000
+gap=8 r=5, true-center MLP=0.750146, test Bayes=0.779217, population Bayes=0.777778
+gap=8 r=8, true-center MLP=0.725855, test Bayes=0.751622, population Bayes=0.750000
+=== 2026-11-18 12:33:16 DONE reflection_metrics.py
+=== 2026-11-18 12:33:16 START reflection_study.py
+stratify Δ=1 r=2 seed=0
+saved 9f8ba746c3 exact match, 242 / 5000 reflecting, MLP R² 0.1773 reflecting, -0.0305 nonreflecting
+stratify Δ=1 r=2 seed=1
+saved 6143fcddb9 exact match, 242 / 5000 reflecting, MLP R² 0.1817 reflecting, -0.0384 nonreflecting
+stratify Δ=1 r=2 seed=2
+saved ffee1a8254 exact match, 242 / 5000 reflecting, MLP R² 0.4817 reflecting, 0.9689 nonreflecting
+stratify Δ=1 r=2 seed=3
+saved d8cbaea1c0 exact match, 242 / 5000 reflecting, MLP R² 0.1952 reflecting, -0.0395 nonreflecting
+stratify Δ=1 r=2 seed=4
+saved 22dd35ac04 exact match, 242 / 5000 reflecting, MLP R² 0.2214 reflecting, -0.0302 nonreflecting
+stratify Δ=1 r=5 seed=0
+saved dc3ca3afa0 exact match, 268 / 5000 reflecting, MLP R² 0.2638 reflecting, 0.1536 nonreflecting
+stratify Δ=1 r=5 seed=1
+saved fcf640e315 exact match, 268 / 5000 reflecting, MLP R² 0.2309 reflecting, 0.0010 nonreflecting
+stratify Δ=1 r=5 seed=2
+saved 13204fbad6 exact match, 268 / 5000 reflecting, MLP R² 0.2056 reflecting, -0.0345 nonreflecting
+stratify Δ=1 r=5 seed=3
+saved ff25e2fb7a exact match, 268 / 5000 reflecting, MLP R² 0.2116 reflecting, -0.0330 nonreflecting
+stratify Δ=1 r=5 seed=4
+saved 968578f263 exact match, 268 / 5000 reflecting, MLP R² 0.2252 reflecting, -0.0375 nonreflecting
+stratify Δ=1 r=8 seed=0
+saved e6fb48ed7c exact match, 298 / 5000 reflecting, MLP R² 0.2471 reflecting, -0.0312 nonreflecting
+stratify Δ=1 r=8 seed=1
+saved f13d55a922 exact match, 298 / 5000 reflecting, MLP R² 0.2237 reflecting, -0.0275 nonreflecting
+stratify Δ=1 r=8 seed=2
+saved 0bafb3a609 exact match, 298 / 5000 reflecting, MLP R² 0.2360 reflecting, -0.0287 nonreflecting
+stratify Δ=1 r=8 seed=3
+saved ec43eee081 exact match, 298 / 5000 reflecting, MLP R² 0.2224 reflecting, -0.0299 nonreflecting
+stratify Δ=1 r=8 seed=4
+saved 5d416b97ca exact match, 298 / 5000 reflecting, MLP R² 0.2423 reflecting, -0.0302 nonreflecting
+stratify Δ=2 r=2 seed=0
+saved 42bbe75c4e exact match, 487 / 5000 reflecting, MLP R² 0.4165 reflecting, 0.0031 nonreflecting
+stratify Δ=2 r=2 seed=1
+saved eef2761457 exact match, 487 / 5000 reflecting, MLP R² 0.4135 reflecting, 0.0054 nonreflecting
+stratify Δ=2 r=2 seed=2
+saved 4313bccc31 exact match, 487 / 5000 reflecting, MLP R² 0.5073 reflecting, 0.8011 nonreflecting
+stratify Δ=2 r=2 seed=3
+saved dc7b724eff exact match, 487 / 5000 reflecting, MLP R² 0.4525 reflecting, 0.4853 nonreflecting
+stratify Δ=2 r=2 seed=4
+saved 7da53dc6ae exact match, 487 / 5000 reflecting, MLP R² -0.0513 reflecting, -0.0186 nonreflecting
+stratify Δ=2 r=5 seed=0
+saved d449c07f0a exact match, 541 / 5000 reflecting, MLP R² 0.2867 reflecting, -0.0503 nonreflecting
+stratify Δ=2 r=5 seed=1
+saved b9c537ff11 exact match, 541 / 5000 reflecting, MLP R² 0.2864 reflecting, -0.0511 nonreflecting
+stratify Δ=2 r=5 seed=2
+saved 715e698874 exact match, 541 / 5000 reflecting, MLP R² 0.2783 reflecting, -0.0537 nonreflecting
+stratify Δ=2 r=5 seed=3
+saved ee7922e917 exact match, 541 / 5000 reflecting, MLP R² 0.2918 reflecting, -0.0516 nonreflecting
+stratify Δ=2 r=5 seed=4
+saved bb306ee7cc exact match, 541 / 5000 reflecting, MLP R² 0.5686 reflecting, 0.9363 nonreflecting
+stratify Δ=2 r=8 seed=0
+saved 19677f9bbe exact match, 599 / 5000 reflecting, MLP R² 0.5840 reflecting, 0.9513 nonreflecting
+stratify Δ=2 r=8 seed=1
+saved c23be3c87e exact match, 599 / 5000 reflecting, MLP R² 0.2817 reflecting, -0.0513 nonreflecting
+stratify Δ=2 r=8 seed=2
+saved 39c7d60ef0 exact match, 599 / 5000 reflecting, MLP R² 0.5920 reflecting, 0.9489 nonreflecting
+stratify Δ=2 r=8 seed=3
+saved 5ec5156a54 exact match, 599 / 5000 reflecting, MLP R² 0.2831 reflecting, -0.0469 nonreflecting
+stratify Δ=2 r=8 seed=4
+saved c7ec42a123 exact match, 599 / 5000 reflecting, MLP R² 0.5951 reflecting, 0.9450 nonreflecting
+stratify Δ=4 r=2 seed=0
+saved 86109bf24f exact match, 952 / 5000 reflecting, MLP R² -0.0348 reflecting, -0.0159 nonreflecting
+stratify Δ=4 r=2 seed=1
+saved 79ca3717f5 exact match, 952 / 5000 reflecting, MLP R² 0.4601 reflecting, 0.0555 nonreflecting
+stratify Δ=4 r=2 seed=2
+saved fb1795fdaf exact match, 952 / 5000 reflecting, MLP R² 0.4578 reflecting, 0.0544 nonreflecting
+stratify Δ=4 r=2 seed=3
+saved 1b17ee2cff exact match, 952 / 5000 reflecting, MLP R² -0.0364 reflecting, -0.0176 nonreflecting
+stratify Δ=4 r=2 seed=4
+saved 987701a3e6 exact match, 952 / 5000 reflecting, MLP R² -0.0314 reflecting, -0.0189 nonreflecting
+stratify Δ=4 r=5 seed=0
+saved 30b37db527 exact match, 1056 / 5000 reflecting, MLP R² 0.5952 reflecting, 0.8554 nonreflecting
+stratify Δ=4 r=5 seed=1
+saved ecff36fc20 exact match, 1056 / 5000 reflecting, MLP R² 0.6190 reflecting, 0.8979 nonreflecting
+stratify Δ=4 r=5 seed=2
+saved 30ac8ec4a0 exact match, 1056 / 5000 reflecting, MLP R² 0.5955 reflecting, 0.8644 nonreflecting
+stratify Δ=4 r=5 seed=3
+saved 95388338b7 exact match, 1056 / 5000 reflecting, MLP R² 0.6217 reflecting, 0.9034 nonreflecting
+stratify Δ=4 r=5 seed=4
+saved abea528ad9 exact match, 1056 / 5000 reflecting, MLP R² 0.6224 reflecting, 0.8919 nonreflecting
+stratify Δ=4 r=8 seed=0
+saved 6155c59db1 exact match, 1186 / 5000 reflecting, MLP R² 0.6447 reflecting, 0.9105 nonreflecting
+stratify Δ=4 r=8 seed=1
+saved 1737c67990 exact match, 1186 / 5000 reflecting, MLP R² 0.6506 reflecting, 0.9145 nonreflecting
+stratify Δ=4 r=8 seed=2
+saved 575bf7e525 exact match, 1186 / 5000 reflecting, MLP R² 0.6526 reflecting, 0.9072 nonreflecting
+stratify Δ=4 r=8 seed=3
+saved 03838baa91 exact match, 1186 / 5000 reflecting, MLP R² 0.6381 reflecting, 0.9099 nonreflecting
+stratify Δ=4 r=8 seed=4
+saved 6bb9b5a576 exact match, 1186 / 5000 reflecting, MLP R² 0.6554 reflecting, 0.9017 nonreflecting
+stratify Δ=8 r=2 seed=0
+saved 91b00e2ce6 exact match, 1849 / 5000 reflecting, MLP R² -0.0203 reflecting, -0.0204 nonreflecting
+stratify Δ=8 r=2 seed=1
+saved da2b33f415 exact match, 1849 / 5000 reflecting, MLP R² 0.5126 reflecting, 0.1407 nonreflecting
+stratify Δ=8 r=2 seed=2
+saved 15447fd82c exact match, 1849 / 5000 reflecting, MLP R² 0.5113 reflecting, 0.1404 nonreflecting
+stratify Δ=8 r=2 seed=3
+saved 7ffbb8bd42 exact match, 1849 / 5000 reflecting, MLP R² -0.0177 reflecting, -0.0262 nonreflecting
+stratify Δ=8 r=2 seed=4
+saved 68105388ce exact match, 1849 / 5000 reflecting, MLP R² -0.0223 reflecting, -0.0265 nonreflecting
+stratify Δ=8 r=5 seed=0
+saved f7e2fe2b3b exact match, 2023 / 5000 reflecting, MLP R² 0.5648 reflecting, 0.6975 nonreflecting
+stratify Δ=8 r=5 seed=1
+saved 372e53446a exact match, 2023 / 5000 reflecting, MLP R² 0.5720 reflecting, 0.7106 nonreflecting
+stratify Δ=8 r=5 seed=2
+saved 2bb37fb2b5 exact match, 2023 / 5000 reflecting, MLP R² 0.5958 reflecting, 0.7095 nonreflecting
+stratify Δ=8 r=5 seed=3
+saved b9d32d4172 exact match, 2023 / 5000 reflecting, MLP R² 0.5744 reflecting, 0.6549 nonreflecting
+stratify Δ=8 r=5 seed=4
+saved 1406149706 exact match, 2023 / 5000 reflecting, MLP R² 0.6038 reflecting, 0.8123 nonreflecting
+stratify Δ=8 r=8 seed=0
+saved 7708c22ba0 exact match, 2226 / 5000 reflecting, MLP R² 0.6267 reflecting, 0.7800 nonreflecting
+stratify Δ=8 r=8 seed=1
+saved ca288d61ba exact match, 2226 / 5000 reflecting, MLP R² 0.6212 reflecting, 0.7819 nonreflecting
+stratify Δ=8 r=8 seed=2
+saved 0f5b98835d exact match, 2226 / 5000 reflecting, MLP R² 0.6243 reflecting, 0.7803 nonreflecting
+stratify Δ=8 r=8 seed=3
+saved d27bc8ec86 exact match, 2226 / 5000 reflecting, MLP R² 0.6252 reflecting, 0.7731 nonreflecting
+stratify Δ=8 r=8 seed=4
+saved f0913609c7 exact match, 2226 / 5000 reflecting, MLP R² 0.6197 reflecting, 0.7826 nonreflecting
+=== 2026-11-18 12:57:21 DONE reflection_study.py
+=== 2026-11-18 12:57:21 START summarize_reflections.py
+180 seed/subset rows: /home/yukura/thesis-cuda/results/reflection_stratification_seeds.csv; figure: /home/yukura/thesis-cuda/figures/reflection_velocity.png
+=== 2026-11-18 12:57:23 DONE summarize_reflections.py
+=== 2026-11-18 12:57:23 START filtered_geometry.py
+gap=1 radius=2 selected test prefix 5257, oracle=unmeasured
+gap=1 radius=5 selected test prefix 5286, oracle=unmeasured
+gap=1 radius=8 selected test prefix 5321, oracle=unmeasured
+gap=2 radius=2 selected test prefix 5539, oracle=0.9998608677944814
+gap=2 radius=5 selected test prefix 5600, oracle=0.999852479184018
+gap=2 radius=8 selected test prefix 5671, oracle=0.9998535125839925
+gap=4 radius=2 selected test prefix 6190, oracle=0.9998421681351707
+gap=4 radius=5 selected test prefix 6355, oracle=0.9999316167766581
+gap=4 radius=8 selected test prefix 6565, oracle=0.9998919519628522
+gap=8 radius=2 selected test prefix 7952, oracle=unmeasured
+gap=8 radius=5 selected test prefix 8406, oracle=unmeasured
+gap=8 radius=8 selected test prefix 9025, oracle=unmeasured
+=== 2026-11-18 12:57:33 DONE filtered_geometry.py
+=== 2026-11-18 12:57:33 START filtered_study.py --selection
+filtered_gap_selection: 30 configurations, 30 outstanding
+filtered_gap_selection Δ=2 r=2 seed=0 l2 lr=0.003
+saved 0d6d676d87: velocity MLP R² 0.98122
+filtered_gap_selection Δ=2 r=2 seed=1 l2 lr=0.003
+saved c94cd32db2: velocity MLP R² 0.91128
+filtered_gap_selection Δ=2 r=2 seed=2 l2 lr=0.003
+saved 0c86fa0aa4: velocity MLP R² 0.93368
+filtered_gap_selection Δ=2 r=2 seed=3 l2 lr=0.003
+saved e0a0f574bd: velocity MLP R² 0.91119
+filtered_gap_selection Δ=2 r=2 seed=4 l2 lr=0.003
+saved 440a802792: velocity MLP R² 0.56453
+filtered_gap_selection Δ=2 r=5 seed=0 l2 lr=0.003
+saved dd013485e6: velocity MLP R² -0.02819
+filtered_gap_selection Δ=2 r=5 seed=1 l2 lr=0.003
+saved 5e9f376add: velocity MLP R² -0.03109
+filtered_gap_selection Δ=2 r=5 seed=2 l2 lr=0.003
+saved 207d742166: velocity MLP R² 0.96106
+filtered_gap_selection Δ=2 r=5 seed=3 l2 lr=0.003
+saved e002f0e9c6: velocity MLP R² -0.02961
+filtered_gap_selection Δ=2 r=5 seed=4 l2 lr=0.003
+saved ed258e3c2e: velocity MLP R² 0.97342
+filtered_gap_selection Δ=2 r=8 seed=0 l2 lr=0.003
+saved c7a9edd2d0: velocity MLP R² 0.98206
+filtered_gap_selection Δ=2 r=8 seed=1 l2 lr=0.003
+saved 4ec53467e7: velocity MLP R² -0.02981
+filtered_gap_selection Δ=2 r=8 seed=2 l2 lr=0.003
+saved ae2d67be25: velocity MLP R² 0.98445
+filtered_gap_selection Δ=2 r=8 seed=3 l2 lr=0.003
+saved 55f77404d1: velocity MLP R² -0.02106
+filtered_gap_selection Δ=2 r=8 seed=4 l2 lr=0.003
+saved ce57586d1d: velocity MLP R² -0.01912
+filtered_gap_selection Δ=4 r=2 seed=0 l2 lr=0.003
+saved 9e9cb0a9f1: velocity MLP R² 0.05182
+filtered_gap_selection Δ=4 r=2 seed=1 l2 lr=0.003
+saved 58f292c420: velocity MLP R² 0.05986
+filtered_gap_selection Δ=4 r=2 seed=2 l2 lr=0.003
+saved 1780d07a79: velocity MLP R² 0.06018
+filtered_gap_selection Δ=4 r=2 seed=3 l2 lr=0.003
+saved 8a1e60eeb5: velocity MLP R² 0.04815
+filtered_gap_selection Δ=4 r=2 seed=4 l2 lr=0.003
+saved 84d70d934e: velocity MLP R² 0.04943
+filtered_gap_selection Δ=4 r=5 seed=0 l2 lr=0.003
+saved dd0e40adb2: velocity MLP R² 0.95011
+filtered_gap_selection Δ=4 r=5 seed=1 l2 lr=0.003
+saved 649d90c13d: velocity MLP R² 0.97267
+filtered_gap_selection Δ=4 r=5 seed=2 l2 lr=0.003
+saved da7de757bf: velocity MLP R² 0.95991
+filtered_gap_selection Δ=4 r=5 seed=3 l2 lr=0.003
+saved 6fbb22ef45: velocity MLP R² 0.96829
+filtered_gap_selection Δ=4 r=5 seed=4 l2 lr=0.003
+saved d785c22300: velocity MLP R² 0.97017
+filtered_gap_selection Δ=4 r=8 seed=0 l2 lr=0.003
+saved 8f7f0c43fe: velocity MLP R² 0.98964
+filtered_gap_selection Δ=4 r=8 seed=1 l2 lr=0.003
+saved b839859fff: velocity MLP R² 0.99139
+filtered_gap_selection Δ=4 r=8 seed=2 l2 lr=0.003
+saved c7a63dad5b: velocity MLP R² 0.98616
+filtered_gap_selection Δ=4 r=8 seed=3 l2 lr=0.003
+saved 1aacb0767b: velocity MLP R² 0.98805
+filtered_gap_selection Δ=4 r=8 seed=4 l2 lr=0.003
+saved 8bebcd229b: velocity MLP R² 0.98850
+filtered selected gap: 4
+=== 2026-11-18 13:10:55 DONE filtered_study.py --selection
+=== 2026-11-18 13:10:55 START plot_filtered_gaps.py
+Saved /home/yukura/thesis-cuda/figures/filtered_gap_screen.png and /home/yukura/thesis-cuda/results/filtered_gap_seeds.csv from 30 measured runs.
+=== 2026-11-18 13:10:56 DONE plot_filtered_gaps.py
+=== 2026-11-18 13:10:56 START filtered_study.py --calibrate-only
+filtered_gap_calibration: 36 configurations, 36 outstanding
+filtered_gap_calibration Δ=4 r=5 seed=1729 l1 lr=0.0003
+saved 11c45d08d2: velocity MLP R² 0.07482
+filtered_gap_calibration Δ=4 r=5 seed=1730 l1 lr=0.0003
+saved f44fd7038e: velocity MLP R² 0.06992
+filtered_gap_calibration Δ=4 r=5 seed=1731 l1 lr=0.0003
+saved 264742c08b: velocity MLP R² 0.03264
+filtered_gap_calibration Δ=4 r=5 seed=1729 l1 lr=0.001
+saved 02ac2683e3: velocity MLP R² 0.29831
+filtered_gap_calibration Δ=4 r=5 seed=1730 l1 lr=0.001
+saved 66c1bb1600: velocity MLP R² 0.33757
+filtered_gap_calibration Δ=4 r=5 seed=1731 l1 lr=0.001
+saved 2bff418813: velocity MLP R² 0.19554
+filtered_gap_calibration Δ=4 r=5 seed=1729 l1 lr=0.003
+saved 282b20d7e3: velocity MLP R² 0.62755
+filtered_gap_calibration Δ=4 r=5 seed=1730 l1 lr=0.003
+saved ed5fff47b5: velocity MLP R² 0.67915
+filtered_gap_calibration Δ=4 r=5 seed=1731 l1 lr=0.003
+saved 69b2951cdf: velocity MLP R² 0.71197
+filtered_gap_calibration Δ=4 r=5 seed=1729 l2 lr=0.0003
+saved 30e9057bb7: velocity MLP R² 0.94289
+filtered_gap_calibration Δ=4 r=5 seed=1730 l2 lr=0.0003
+saved fa5c485db5: velocity MLP R² 0.95058
+filtered_gap_calibration Δ=4 r=5 seed=1731 l2 lr=0.0003
+saved afc3580fa1: velocity MLP R² 0.95390
+filtered_gap_calibration Δ=4 r=5 seed=1729 l2 lr=0.001
+saved b3b09d7e7e: velocity MLP R² 0.96049
+filtered_gap_calibration Δ=4 r=5 seed=1730 l2 lr=0.001
+saved b5938e8c28: velocity MLP R² 0.95539
+filtered_gap_calibration Δ=4 r=5 seed=1731 l2 lr=0.001
+saved 2d2edb435b: velocity MLP R² 0.95234
+filtered_gap_calibration Δ=4 r=5 seed=1729 l2 lr=0.003
+saved c2a1818af6: velocity MLP R² 0.97636
+filtered_gap_calibration Δ=4 r=5 seed=1730 l2 lr=0.003
+saved d69c45652b: velocity MLP R² 0.97141
+filtered_gap_calibration Δ=4 r=5 seed=1731 l2 lr=0.003
+saved 5e72887925: velocity MLP R² 0.95754
+filtered_gap_calibration Δ=4 r=5 seed=1729 huber lr=0.0003
+saved b811fca092: velocity MLP R² 0.06887
+filtered_gap_calibration Δ=4 r=5 seed=1730 huber lr=0.0003
+saved 0185635a14: velocity MLP R² 0.07318
+filtered_gap_calibration Δ=4 r=5 seed=1731 huber lr=0.0003
+saved cd39e7ed50: velocity MLP R² 0.07173
+filtered_gap_calibration Δ=4 r=5 seed=1729 huber lr=0.001
+saved 9e491b12b6: velocity MLP R² 0.07052
+filtered_gap_calibration Δ=4 r=5 seed=1730 huber lr=0.001
+saved be40e4641d: velocity MLP R² 0.07465
+filtered_gap_calibration Δ=4 r=5 seed=1731 huber lr=0.001
+saved b407fc67a4: velocity MLP R² 0.06972
+filtered_gap_calibration Δ=4 r=5 seed=1729 huber lr=0.003
+saved a0e995ed93: velocity MLP R² 0.07224
+filtered_gap_calibration Δ=4 r=5 seed=1730 huber lr=0.003
+saved c03e50822b: velocity MLP R² 0.07555
+filtered_gap_calibration Δ=4 r=5 seed=1731 huber lr=0.003
+saved 7e0441dea1: velocity MLP R² 0.07297
+filtered_gap_calibration Δ=4 r=5 seed=1729 charbonnier lr=0.0003
+saved c5dc744829: velocity MLP R² 0.18739
+filtered_gap_calibration Δ=4 r=5 seed=1730 charbonnier lr=0.0003
+saved 5171ace41a: velocity MLP R² 0.09469
+filtered_gap_calibration Δ=4 r=5 seed=1731 charbonnier lr=0.0003
+saved 4855bf5a17: velocity MLP R² 0.05697
+filtered_gap_calibration Δ=4 r=5 seed=1729 charbonnier lr=0.001
+saved 02a6166a94: velocity MLP R² 0.47744
+filtered_gap_calibration Δ=4 r=5 seed=1730 charbonnier lr=0.001
+saved 8e4e09fa7a: velocity MLP R² 0.11119
+filtered_gap_calibration Δ=4 r=5 seed=1731 charbonnier lr=0.001
+saved d2c5d20b98: velocity MLP R² 0.23664
+filtered_gap_calibration Δ=4 r=5 seed=1729 charbonnier lr=0.003
+saved 0a3954bec2: velocity MLP R² 0.07122
+filtered_gap_calibration Δ=4 r=5 seed=1730 charbonnier lr=0.003
+saved 2ce4ec3151: velocity MLP R² 0.64760
+filtered_gap_calibration Δ=4 r=5 seed=1731 charbonnier lr=0.003
+saved 025e5ed973: velocity MLP R² 0.27270
+filtered selected LRs: {'l1': 0.003, 'l2': 0.003, 'huber': 0.003, 'charbonnier': 0.003}
+=== 2026-11-18 13:26:08 DONE filtered_study.py --calibrate-only
+=== 2026-11-18 13:26:08 PHASE A COMPLETE

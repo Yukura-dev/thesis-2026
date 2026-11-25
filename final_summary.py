@@ -450,7 +450,7 @@ def write_outputs(summary, out):
     (out / "tables.md").write_text(markdown(summary).replace("(results/final_gh/", "("))
 
 
-def rescore_h_zero(device="mps"):
+def rescore_h_zero(device="auto"):
     """Only saved weights; exact original image metrics are required before recording."""
     from filelock import FileLock
     import os
@@ -513,9 +513,10 @@ def main():
     parser.add_argument("--out", type=Path, default=ROOT / "results/final_gh")
     parser.add_argument("--allow-partial", action="store_true")
     parser.add_argument("--rescore-h-zero", action="store_true")
+    parser.add_argument("--device", choices=("auto", "cpu", "cuda", "mps"), default="auto")
     args = parser.parse_args()
     if args.rescore_h_zero:
-        rescore_h_zero()
+        rescore_h_zero(args.device)
         return
     summary = collect(load_ledger(RUNS), load_ledger(ZERO_IMAGES), load_ledger(ARCHIVAL),
                       allow_partial=args.allow_partial)

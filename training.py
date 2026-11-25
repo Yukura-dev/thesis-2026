@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import math
 import os
 import threading
 import time
@@ -15,6 +16,14 @@ from torch.nn import functional as F
 
 from data import MovieStream, validate_frame_gap
 from evaluation import evaluate, validate_probe_splits
+
+
+# M: losses whose smoothing width is the Config field loss_scale.
+#   smooth_l1: Huber normalised to unit slope, 0.5 e^2/beta for |e| < beta else |e| - beta/2.
+#   gauss_l1:  E|e + n| with n ~ N(0, sigma^2), the exact expected L1 under Gaussian target noise.
+#   bg_weighted_l1 (B-3): plain L1 whose background pixels (clean target equal to the image
+#     minimum) get weight loss_scale and object pixels weight 1. Diagnostic only: needs clean targets.
+SCALED_LOSSES = ("smooth_l1", "gauss_l1", "bg_weighted_l1")
 
 
 @dataclass(frozen=True)
@@ -36,6 +45,7 @@ class Config:
     frame_gap: int = 1
     reject_reflections: bool = False
     background_texture_sd: float = 0.0
+    loss_scale: float = 0.0
 
     def __post_init__(self):
         validate_frame_gap(self.frame_gap)
@@ -43,8 +53,10 @@ class Config:
             raise ValueError("reject_reflections must be boolean")
         if self.radius not in (1, 2, 3, 5, 8) or self.latent_dim not in (4, 16, 64):
             raise ValueError("Unsupported radius or latent dimension")
-        if self.loss not in ("l1", "l2", "huber", "charbonnier"):
+        if self.loss not in ("l1", "l2", "huber", "charbonnier") + SCALED_LOSSES:
             raise ValueError(f"Unknown reconstruction loss: {self.loss}")
+        if not np.isfinite(self.loss_scale) or (self.loss_scale > 0) != (self.loss in SCALED_LOSSES):
+            raise ValueError("loss_scale must be positive exactly for smooth_l1/gauss_l1, else 0")
         if self.noise_type not in ("gaussian", "salt_pepper"):
             raise ValueError(f"Unknown noise type: {self.noise_type}")
         if self.placement not in ("input_only", "target_only", "both"):
@@ -117,7 +129,24 @@ class Autoencoder(nn.Module):
         return self.decode(self.encode(x))
 
 
-def reconstruction_loss(prediction, target, name):
+def gaussian_smoothed_l1(error, sigma):
+    """Elementwise E|error + n|, n ~ N(0, sigma^2); derivative erf(error / (sigma sqrt 2))."""
+    scaled = error / (sigma * math.sqrt(2))
+    return (sigma * math.sqrt(2 / math.pi) * torch.exp(-scaled.square()) +
+            error * torch.special.erf(scaled))
+
+
+def reconstruction_loss(prediction, target, name, scale=0.0):
+    if name in SCALED_LOSSES and not scale > 0:
+        raise ValueError(f"{name} needs a positive scale")
+    if name == "smooth_l1":
+        return F.smooth_l1_loss(prediction, target, beta=scale)
+    if name == "gauss_l1":
+        return gaussian_smoothed_l1(prediction - target, scale).mean()
+    if name == "bg_weighted_l1":
+        background = target <= target.amin(dim=(-2, -1), keepdim=True)
+        weight = torch.where(background, torch.full_like(target, scale), torch.ones_like(target))
+        return (weight * (prediction - target).abs()).mean()
     if name == "l2":
         return F.mse_loss(prediction, target)
     if name == "l1":
@@ -213,7 +242,7 @@ def _validate(model, cfg, device):
         batch = stream.sample(count, need_target=False)
         x = torch.from_numpy(batch.input).to(device)
         clean = torch.from_numpy(batch.clean).to(device)
-        total += reconstruction_loss(model(x), clean, cfg.loss).item() * count
+        total += reconstruction_loss(model(x), clean, cfg.loss, cfg.loss_scale).item() * count
     return total / n
 
 
@@ -251,7 +280,7 @@ def run_experiment(config: Config, device="auto", *, calibration=False, diagnost
             x = torch.from_numpy(batch.input).to(device)
             target = torch.from_numpy(batch.target).to(device)
             optimizer.zero_grad(set_to_none=True)
-            loss = reconstruction_loss(model(x), target, config.loss)
+            loss = reconstruction_loss(model(x), target, config.loss, config.loss_scale)
             loss.backward()
             optimizer.step()
         _sync(device)

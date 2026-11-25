@@ -1,0 +1,242 @@
+[
+ {
+  "reject": true,
+  "radius": 1,
+  "input": "current",
+  "vel_r2_mlp": 0.0632,
+  "vel_r2_ridge": 0.036,
+  "corr_x_vx": 0.211
+ },
+ {
+  "reject": true,
+  "radius": 1,
+  "input": "previous",
+  "vel_r2_mlp": 0.07,
+  "vel_r2_ridge": 0.0441,
+  "corr_x_vx": 0.211
+ },
+ {
+  "reject": true,
+  "radius": 1,
+  "input": "both",
+  "vel_r2_mlp": 0.9999,
+  "vel_r2_ridge": 1.0,
+  "corr_x_vx": 0.211
+ },
+ {
+  "reject": true,
+  "radius": 2,
+  "input": "current",
+  "vel_r2_mlp": 0.0676,
+  "vel_r2_ridge": 0.0381,
+  "corr_x_vx": 0.22
+ },
+ {
+  "reject": true,
+  "radius": 2,
+  "input": "previous",
+  "vel_r2_mlp": 0.0743,
+  "vel_r2_ridge": 0.0474,
+  "corr_x_vx": 0.22
+ },
+ {
+  "reject": true,
+  "radius": 2,
+  "input": "both",
+  "vel_r2_mlp": 0.9998,
+  "vel_r2_ridge": 1.0,
+  "corr_x_vx": 0.22
+ },
+ {
+  "reject": true,
+  "radius": 3,
+  "input": "current",
+  "vel_r2_mlp": 0.0695,
+  "vel_r2_ridge": 0.041,
+  "corr_x_vx": 0.224
+ },
+ {
+  "reject": true,
+  "radius": 3,
+  "input": "previous",
+  "vel_r2_mlp": 0.0767,
+  "vel_r2_ridge": 0.051,
+  "corr_x_vx": 0.224
+ },
+ {
+  "reject": true,
+  "radius": 3,
+  "input": "both",
+  "vel_r2_mlp": 0.9999,
+  "vel_r2_ridge": 1.0,
+  "corr_x_vx": 0.224
+ },
+ {
+  "reject": true,
+  "radius": 5,
+  "input": "current",
+  "vel_r2_mlp": 0.0761,
+  "vel_r2_ridge": 0.0494,
+  "corr_x_vx": 0.24
+ },
+ {
+  "reject": true,
+  "radius": 5,
+  "input": "previous",
+  "vel_r2_mlp": 0.0833,
+  "vel_r2_ridge": 0.0575,
+  "corr_x_vx": 0.24
+ },
+ {
+  "reject": true,
+  "radius": 5,
+  "input": "both",
+  "vel_r2_mlp": 0.9999,
+  "vel_r2_ridge": 1.0,
+  "corr_x_vx": 0.24
+ },
+ {
+  "reject": true,
+  "radius": 8,
+  "input": "current",
+  "vel_r2_mlp": 0.0905,
+  "vel_r2_ridge": 0.0645,
+  "corr_x_vx": 0.271
+ },
+ {
+  "reject": true,
+  "radius": 8,
+  "input": "previous",
+  "vel_r2_mlp": 0.0964,
+  "vel_r2_ridge": 0.0711,
+  "corr_x_vx": 0.271
+ },
+ {
+  "reject": true,
+  "radius": 8,
+  "input": "both",
+  "vel_r2_mlp": 0.9999,
+  "vel_r2_ridge": 1.0,
+  "corr_x_vx": 0.271
+ },
+ {
+  "reject": false,
+  "radius": 1,
+  "input": "current",
+  "vel_r2_mlp": -0.0016,
+  "vel_r2_ridge": -0.0006,
+  "corr_x_vx": -0.006
+ },
+ {
+  "reject": false,
+  "radius": 1,
+  "input": "previous",
+  "vel_r2_mlp": 0.1544,
+  "vel_r2_ridge": 0.1146,
+  "corr_x_vx": -0.006
+ },
+ {
+  "reject": false,
+  "radius": 1,
+  "input": "both",
+  "vel_r2_mlp": 0.8634,
+  "vel_r2_ridge": 0.8394,
+  "corr_x_vx": -0.006
+ },
+ {
+  "reject": false,
+  "radius": 2,
+  "input": "current",
+  "vel_r2_mlp": -0.0017,
+  "vel_r2_ridge": -0.0006,
+  "corr_x_vx": -0.006
+ },
+ {
+  "reject": false,
+  "radius": 2,
+  "input": "previous",
+  "vel_r2_mlp": 0.1595,
+  "vel_r2_ridge": 0.1207,
+  "corr_x_vx": -0.006
+ },
+ {
+  "reject": false,
+  "radius": 2,
+  "input": "both",
+  "vel_r2_mlp": 0.8594,
+  "vel_r2_ridge": 0.8355,
+  "corr_x_vx": -0.006
+ },
+ {
+  "reject": false,
+  "radius": 3,
+  "input": "current",
+  "vel_r2_mlp": -0.0018,
+  "vel_r2_ridge": -0.0005,
+  "corr_x_vx": -0.006
+ },
+ {
+  "reject": false,
+  "radius": 3,
+  "input": "previous",
+  "vel_r2_mlp": 0.1654,
+  "vel_r2_ridge": 0.128,
+  "corr_x_vx": -0.006
+ },
+ {
+  "reject": false,
+  "radius": 3,
+  "input": "both",
+  "vel_r2_mlp": 0.8556,
+  "vel_r2_ridge": 0.8296,
+  "corr_x_vx": -0.006
+ },
+ {
+  "reject": false,
+  "radius": 5,
+  "input": "current",
+  "vel_r2_mlp": -0.0022,
+  "vel_r2_ridge": -0.0005,
+  "corr_x_vx": -0.006
+ },
+ {
+  "reject": false,
+  "radius": 5,
+  "input": "previous",
+  "vel_r2_mlp": 0.1785,
+  "vel_r2_ridge": 0.1421,
+  "corr_x_vx": -0.006
+ },
+ {
+  "reject": false,
+  "radius": 5,
+  "input": "both",
+  "vel_r2_mlp": 0.8481,
+  "vel_r2_ridge": 0.8213,
+  "corr_x_vx": -0.006
+ },
+ {
+  "reject": false,
+  "radius": 8,
+  "input": "current",
+  "vel_r2_mlp": -0.002,
+  "vel_r2_ridge": -0.0006,
+  "corr_x_vx": -0.003
+ },
+ {
+  "reject": false,
+  "radius": 8,
+  "input": "previous",
+  "vel_r2_mlp": 0.2007,
+  "vel_r2_ridge": 0.169,
+  "corr_x_vx": -0.003
+ },
+ {
+  "reject": false,
+  "radius": 8,
+  "input": "both",
+  "vel_r2_mlp": 0.8377,
+  "vel_r2_ridge": 0.8057,
+  "corr_x_vx": -0.003
+ }
+]

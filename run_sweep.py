@@ -107,6 +107,8 @@ def config_record(config):
         del record["reject_reflections"]
     if record.get("background_texture_sd") == 0:
         del record["background_texture_sd"]
+    if record.get("loss_scale") == 0:
+        del record["loss_scale"]
     return record
 
 
