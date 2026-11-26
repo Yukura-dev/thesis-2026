@@ -1,6 +1,6 @@
 # Experiment N addendum: frame-swap test and past-only oracle (pre-registered)
 
-Written 2026-11-27, after an external review and before running anything below.
+Written 2026-11-26, after an external review and before running anything below. (The date was first mistyped as 2026-11-27; corrected after review. The plan and its results were committed together in 0d0cbc6, so git does not independently show that the plan came first.)
 
 ## Why
 "z matches the oracle" shows only that the probes we tried read no more than the oracle does.
