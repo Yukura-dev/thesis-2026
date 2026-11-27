@@ -27,6 +27,8 @@ WSL had 7.7 GB of RAM: run at most two analysis processes at once (each holds ~2
 | drift.py, drift.jsonl | representation drift between checkpoints (CKA, affine R²) |
 | cross_arm.py, cross_arm.jsonl | the same seed under different losses, same step |
 | summarize.py, tables.md, figures/ | tables and figures |
+| rerun_layers.sh, layers_superseded_standardized_ridge.jsonl | layer probes recomputed with a centred ridge (see REPORT 1.2); the superseded first version is kept |
+| g3_time.py, g3_time.jsonl, union.py, union.jsonl | follow-ups F2 (pre-registered in PLAN_followups.md) and F3 |
 | logs/ | per-job logs |
 
 ## Checkpoints

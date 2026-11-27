@@ -1,0 +1,5 @@
+layers l2 r8 s4 step 0 87s
+layers l2 r8 s4 step 25 171s
+layers l2 r8 s4 step 100 256s
+layers l2 r8 s4 step 3000 321s
+done l2 8 4 321s

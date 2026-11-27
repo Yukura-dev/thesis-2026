@@ -1,3 +1,5 @@
 layers gauss r8 s2 step 0 88s
 layers gauss r8 s2 step 25 177s
 layers gauss r8 s2 step 100 263s
+layers gauss r8 s2 step 3000 349s
+done gauss 8 2 349s

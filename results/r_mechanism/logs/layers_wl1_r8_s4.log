@@ -1,0 +1,5 @@
+layers wl1 r8 s4 step 0 82s
+layers wl1 r8 s4 step 25 168s
+layers wl1 r8 s4 step 100 253s
+layers wl1 r8 s4 step 3000 338s
+done wl1 8 4 338s

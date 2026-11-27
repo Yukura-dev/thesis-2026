@@ -1,0 +1,5 @@
+layers l2 r5 s2 step 0 88s
+layers l2 r5 s2 step 25 174s
+layers l2 r5 s2 step 100 261s
+layers l2 r5 s2 step 3000 347s
+done l2 5 2 347s

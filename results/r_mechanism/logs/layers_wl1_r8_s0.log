@@ -1,0 +1,5 @@
+layers wl1 r8 s0 step 0 85s
+layers wl1 r8 s0 step 25 170s
+layers wl1 r8 s0 step 100 256s
+layers wl1 r8 s0 step 3000 341s
+done wl1 8 0 341s
