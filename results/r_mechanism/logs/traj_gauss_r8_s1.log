@@ -1,0 +1,25 @@
+gauss r8 s1 step 0 3s
+gauss r8 s1 step 1 5s
+gauss r8 s1 step 2 7s
+gauss r8 s1 step 5 10s
+gauss r8 s1 step 10 12s
+gauss r8 s1 step 20 14s
+gauss r8 s1 step 25 16s
+gauss r8 s1 step 50 18s
+gauss r8 s1 step 75 20s
+gauss r8 s1 step 100 23s
+gauss r8 s1 step 150 25s
+gauss r8 s1 step 200 27s
+gauss r8 s1 step 300 29s
+gauss r8 s1 step 500 31s
+gauss r8 s1 step 750 34s
+gauss r8 s1 step 1000 36s
+gauss r8 s1 step 1500 38s
+gauss r8 s1 step 2000 40s
+gauss r8 s1 step 2500 42s
+gauss r8 s1 step 3000 51s
+layers gauss r8 s1 step 0 92s
+layers gauss r8 s1 step 25 132s
+layers gauss r8 s1 step 100 172s
+layers gauss r8 s1 step 3000 212s
+done gauss 8 1 212s

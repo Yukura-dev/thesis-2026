@@ -1,0 +1,25 @@
+l2 r8 s3 step 0 3s
+l2 r8 s3 step 1 5s
+l2 r8 s3 step 2 8s
+l2 r8 s3 step 5 10s
+l2 r8 s3 step 10 12s
+l2 r8 s3 step 20 14s
+l2 r8 s3 step 25 16s
+l2 r8 s3 step 50 18s
+l2 r8 s3 step 75 21s
+l2 r8 s3 step 100 23s
+l2 r8 s3 step 150 25s
+l2 r8 s3 step 200 27s
+l2 r8 s3 step 300 29s
+l2 r8 s3 step 500 31s
+l2 r8 s3 step 750 33s
+l2 r8 s3 step 1000 35s
+l2 r8 s3 step 1500 38s
+l2 r8 s3 step 2000 40s
+l2 r8 s3 step 2500 42s
+l2 r8 s3 step 3000 51s
+layers l2 r8 s3 step 0 92s
+layers l2 r8 s3 step 25 132s
+layers l2 r8 s3 step 100 171s
+layers l2 r8 s3 step 3000 211s
+done l2 8 3 211s

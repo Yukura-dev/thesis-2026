@@ -1,0 +1,5 @@
+layers gauss r5 s2 step 0 87s
+layers gauss r5 s2 step 25 173s
+layers gauss r5 s2 step 100 260s
+layers gauss r5 s2 step 3000 343s
+done gauss 5 2 343s

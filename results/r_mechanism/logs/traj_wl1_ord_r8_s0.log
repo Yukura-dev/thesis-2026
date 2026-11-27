@@ -1,0 +1,21 @@
+wl1_ord r8 s0 step 0 3s
+wl1_ord r8 s0 step 1 5s
+wl1_ord r8 s0 step 2 7s
+wl1_ord r8 s0 step 5 9s
+wl1_ord r8 s0 step 10 11s
+wl1_ord r8 s0 step 20 14s
+wl1_ord r8 s0 step 25 16s
+wl1_ord r8 s0 step 50 18s
+wl1_ord r8 s0 step 75 20s
+wl1_ord r8 s0 step 100 22s
+wl1_ord r8 s0 step 150 24s
+wl1_ord r8 s0 step 200 26s
+wl1_ord r8 s0 step 300 29s
+wl1_ord r8 s0 step 500 31s
+wl1_ord r8 s0 step 750 33s
+wl1_ord r8 s0 step 1000 35s
+wl1_ord r8 s0 step 1500 37s
+wl1_ord r8 s0 step 2000 39s
+wl1_ord r8 s0 step 2500 41s
+wl1_ord r8 s0 step 3000 50s
+done wl1_ord 8 0 50s

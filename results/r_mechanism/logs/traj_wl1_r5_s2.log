@@ -1,0 +1,25 @@
+wl1 r5 s2 step 0 4s
+wl1 r5 s2 step 1 6s
+wl1 r5 s2 step 2 8s
+wl1 r5 s2 step 5 11s
+wl1 r5 s2 step 10 13s
+wl1 r5 s2 step 20 15s
+wl1 r5 s2 step 25 17s
+wl1 r5 s2 step 50 20s
+wl1 r5 s2 step 75 22s
+wl1 r5 s2 step 100 24s
+wl1 r5 s2 step 150 26s
+wl1 r5 s2 step 200 29s
+wl1 r5 s2 step 300 31s
+wl1 r5 s2 step 500 33s
+wl1 r5 s2 step 750 36s
+wl1 r5 s2 step 1000 38s
+wl1 r5 s2 step 1500 40s
+wl1 r5 s2 step 2000 43s
+wl1 r5 s2 step 2500 45s
+wl1 r5 s2 step 3000 54s
+layers wl1 r5 s2 step 0 99s
+layers wl1 r5 s2 step 25 143s
+layers wl1 r5 s2 step 100 186s
+layers wl1 r5 s2 step 3000 229s
+done wl1 5 2 229s

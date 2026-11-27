@@ -457,4 +457,37 @@ if layers:
     ax[0].legend(fontsize=8)
     fig.tight_layout()
     fig.savefig(FIG / "layers_velocity.png", dpi=150)
+if un:
+    fig, ax = plt.subplots(1, 2, figsize=(11, 3.8), sharey=True)
+    for j, R in enumerate((5, 8)):
+        for arm in ("wl1", "gauss", "l2", "wl1_ord", "l1"):
+            st = sorted({r["step"] for r in un})
+            xs = [max(s, .5) for s in st]
+            own = [np.median([o for o, _ in U[(arm, R, s)]]) for s in st]
+            oth = [np.median([o for _, o in U[(arm, R, s)]]) for s in st]
+            ax[j].plot(xs, own, color=COL[arm], label=f"{arm} own disk", marker=".")
+            ax[j].plot(xs, oth, color=COL[arm], ls="--", label=f"{arm} other disk")
+        ax[j].set_xscale("log")
+        ax[j].set_xlabel("step")
+        ax[j].set_title(f"r={R}: brightness on own vs other frame's disk (median of 5)", fontsize=9)
+    ax[0].set_ylabel("(output − bg) ÷ (fg − bg)")
+    ax[1].legend(fontsize=7, ncol=2)
+    fig.tight_layout()
+    fig.savefig(FIG / "union_transient.png", dpi=150)
+if gt:
+    fig, ax = plt.subplots(1, 2, figsize=(11, 3.6), sharey=True)
+    for j, R in enumerate((5, 8)):
+        for s in range(5):
+            ys = []
+            for st in steps_t:
+                e = [x for x in gt if x["encoder"] == f"l1@{st}" and x["pre"] == "standardize" and x["radius"] == R and x["seed"] == s]
+                ys.append(e[0]["metrics"]["iou"] if e else np.nan)
+            ax[j].plot([max(t, .5) for t in steps_t], ys, marker="o", label=f"seed {s}")
+        ax[j].set_xscale("log")
+        ax[j].set_xlabel("step of the frozen plain-L1 encoder")
+        ax[j].set_title(f"r={R}: IoU of a fresh L2 decoder on standardized z", fontsize=9)
+    ax[0].set_ylabel("IoU")
+    ax[0].legend(fontsize=8)
+    fig.tight_layout()
+    fig.savefig(FIG / "g3_time.png", dpi=150)
 print("figures:", sorted(p.name for p in FIG.iterdir()))

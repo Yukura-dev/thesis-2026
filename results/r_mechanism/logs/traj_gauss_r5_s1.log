@@ -1,0 +1,25 @@
+gauss r5 s1 step 0 3s
+gauss r5 s1 step 1 5s
+gauss r5 s1 step 2 8s
+gauss r5 s1 step 5 10s
+gauss r5 s1 step 10 12s
+gauss r5 s1 step 20 14s
+gauss r5 s1 step 25 16s
+gauss r5 s1 step 50 18s
+gauss r5 s1 step 75 21s
+gauss r5 s1 step 100 23s
+gauss r5 s1 step 150 25s
+gauss r5 s1 step 200 27s
+gauss r5 s1 step 300 29s
+gauss r5 s1 step 500 31s
+gauss r5 s1 step 750 33s
+gauss r5 s1 step 1000 35s
+gauss r5 s1 step 1500 37s
+gauss r5 s1 step 2000 39s
+gauss r5 s1 step 2500 42s
+gauss r5 s1 step 3000 50s
+layers gauss r5 s1 step 0 92s
+layers gauss r5 s1 step 25 131s
+layers gauss r5 s1 step 100 171s
+layers gauss r5 s1 step 3000 212s
+done gauss 5 1 212s

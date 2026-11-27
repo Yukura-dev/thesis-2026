@@ -1,0 +1,5 @@
+layers gauss r8 s0 step 0 85s
+layers gauss r8 s0 step 25 172s
+layers gauss r8 s0 step 100 258s
+layers gauss r8 s0 step 3000 341s
+done gauss 8 0 341s

@@ -1,0 +1,14 @@
+{"arm": "l1", "radius": 8, "seed": 1, "loss": "l1", "loss_scale": 0.0, "model_sha256": "3cf8caad00e4398c387594347e4f620f9a0e6448a6a54b66b4755f6a68b116d5", "ledger_match": true, "seconds": 695.8231177330017}
+{"arm": "l1", "radius": 8, "seed": 2, "loss": "l1", "loss_scale": 0.0, "model_sha256": "bb3cc6593959eaf13e63f990796c6cab863f6080b1fae542b638e2fcfb869a87", "ledger_match": true, "seconds": 175.50367331504822}
+{"arm": "l1", "radius": 8, "seed": 3, "loss": "l1", "loss_scale": 0.0, "model_sha256": "63f0f67fb523c36fb02d6fd2ecbebf16b4f015b7023d4ba15b60fd387603e927", "ledger_match": true, "seconds": 128.27286434173584}
+{"arm": "l1", "radius": 8, "seed": 4, "loss": "l1", "loss_scale": 0.0, "model_sha256": "112825bd5406adfbaeca8912a0fadf32075170d52535b65dd1e5084af4ce5e27", "ledger_match": true, "seconds": 129.69591355323792}
+{"arm": "l2", "radius": 5, "seed": 0, "loss": "l2", "loss_scale": 0.0, "model_sha256": "3cec3405d367ebb9793c56b86649c9c7eaec60c5664c4e43eb81274719c3182f", "ledger_match": true, "seconds": 126.2913281917572}
+{"arm": "l2", "radius": 5, "seed": 1, "loss": "l2", "loss_scale": 0.0, "model_sha256": "be58c4056934c3fdf65c9bc53bf5cb454663651e5b697879dd30c5ba1674d9a8", "ledger_match": true, "seconds": 125.13467335700989}
+{"arm": "l2", "radius": 5, "seed": 2, "loss": "l2", "loss_scale": 0.0, "model_sha256": "f0261781c1a7b03e4b59b82ad919b7e07c42afeb112155ef0fe5cee8260aca21", "ledger_match": true, "seconds": 126.98409962654114}
+{"arm": "l2", "radius": 5, "seed": 3, "loss": "l2", "loss_scale": 0.0, "model_sha256": "2c7d05907be5c29c0eb878a92e5de36ae6581a7d9a134802030f59966231b654", "ledger_match": true, "seconds": 127.6395275592804}
+{"arm": "l2", "radius": 5, "seed": 4, "loss": "l2", "loss_scale": 0.0, "model_sha256": "fb2724f4f4d1dca1418f470e23dbc41e9f135b6b2ba883dd03f1d049f60722ef", "ledger_match": true, "seconds": 124.92126846313477}
+{"arm": "l2", "radius": 8, "seed": 0, "loss": "l2", "loss_scale": 0.0, "model_sha256": "d1a01511ba732ad93a1ff94cc83edfcb80ccd71865598b0884a295578deefc7f", "ledger_match": true, "seconds": 125.01623892784119}
+{"arm": "l2", "radius": 8, "seed": 1, "loss": "l2", "loss_scale": 0.0, "model_sha256": "869e6812ae1ee572fbc8abefe0f53c90aa8f25774cf95d76f498d2f1c639ba71", "ledger_match": true, "seconds": 124.21982264518738}
+{"arm": "l2", "radius": 8, "seed": 2, "loss": "l2", "loss_scale": 0.0, "model_sha256": "11b04c679376613740cff9d6b33c8dbca288d7a80cfd0f67294dbcb5b4434a83", "ledger_match": true, "seconds": 124.37852692604065}
+{"arm": "l2", "radius": 8, "seed": 3, "loss": "l2", "loss_scale": 0.0, "model_sha256": "ea41c5f266334b07689f0a0df1dff322454db8afc603a604f6ce1516a32fe9dd", "ledger_match": true, "seconds": 123.8665406703949}
+{"arm": "l2", "radius": 8, "seed": 4, "loss": "l2", "loss_scale": 0.0, "model_sha256": "4ae26ecf5d432f54dfa66556881dc93bf972cdea30476d2bd3e9c23438bc84eb", "ledger_match": true, "seconds": 124.30895948410034}

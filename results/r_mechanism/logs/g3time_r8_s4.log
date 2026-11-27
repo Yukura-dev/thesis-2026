@@ -1,0 +1,9 @@
+grouped-vs-module max abs diff 8.940696716308594e-08
+r8 s4 step 50 11s
+r8 s4 step 500 110s
+r8 s4 step 1000 221s
+r8 s4 step 1500 331s
+r8 s4 step 2000 441s
+r8 s4 step 2500 544s
+r8 s4 step 3000 630s
+done 8 4 634.2893970012665
